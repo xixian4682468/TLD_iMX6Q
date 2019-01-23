@@ -30,6 +30,7 @@ public:
   void NNConf(const cv::Mat& example,std::vector<int>& isin,float& rsconf,float& csconf);
   void evaluateTh(const std::vector<std::pair<std::vector<int>,int> >& nXT,const std::vector<cv::Mat>& nExT);
   void show();
+  void clear(); 
   //Ferns Members
   int getNumStructs(){return nstructs;}
   float getFernTh(){return thr_fern;}

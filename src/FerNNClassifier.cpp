@@ -10,6 +10,17 @@
 using namespace cv;
 using namespace std;
 
+
+void FerNNClassifier::clear()
+{
+    nEx.clear();
+    pEx.clear();
+    features.clear();
+    nCounter.clear();
+    pCounter.clear();
+    posteriors.clear();
+}
+
 void FerNNClassifier::read(const FileNode& file)
 {
   ///Classifier Parameters
