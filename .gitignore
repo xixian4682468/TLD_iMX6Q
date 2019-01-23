@@ -1,0 +1,5 @@
+*.txt~
+*.doc
+*si4project/
+build/
+lib/
