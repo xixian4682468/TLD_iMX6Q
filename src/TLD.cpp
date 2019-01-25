@@ -1181,6 +1181,9 @@ void detect(const cv::Mat& frame)
     maxx = 0;
     th_max = 0;
     sec_max = 0;
+	maxx_num = 0;
+	sec_max_num = 0;
+	th_max_num = 0;
 }
 
 void evaluate()
