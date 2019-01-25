@@ -98,7 +98,7 @@ void clearr()
 	scales.clear();
 	good_boxes.clear();
 	bad_boxes.clear();
-	classifier.nnc_clear();
+	classifier.clear();
 }
 
 

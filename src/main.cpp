@@ -47,6 +47,10 @@ extern "C" {
 #include "NCC_Track.h"
 }
 
+#ifndef   UINT64_C
+#define   UINT64_C(value)__CONCAT(value,ULL)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -3,3 +3,7 @@
 *si4project/
 build/
 lib/
+*.h~
+*.hpp~
+*.cpp~
+*.c

@@ -71,15 +71,15 @@ void FerNNClassifier::prepare(const vector<Size>& scales){
 void FerNNClassifier::getFeatures(const cv::Mat& image,const int& scale_idx, vector<int>& fern)
 {
   int leaf;
-//  int t_ns;
-  int tt_ns[10] = {0, 13, 26, 39, 52, 65, 78, 91, 104, 117};
-  for (int t=0;t<10;t++)
+  int t_ns;
+//  int tt_ns[10] = {0, 13, 26, 39, 52, 65, 78, 91, 104, 117};
+  for (int t=0;t<nstructs;t++)
   {
       leaf=0;
-//      t_ns = t*nstructs;
-      for (int f=0; f<13; f++)
+      t_ns = t*nstructs;//
+      for (int f=0; f<structSize; f++)
       {
-          leaf = (leaf << 1) + features[scale_idx][tt_ns[t] + f](image);
+          leaf = (leaf << 1) + features[scale_idx][t_ns + f](image);
       }
       fern[t]=leaf;
   }
