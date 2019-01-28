@@ -1,18 +1,22 @@
 # 版本限定 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)     
 # 项目名称 
-PROJECT(IMX6Q_VPU_Capture_Module.out)
+PROJECT(iMX6Q_VPU_Capture_Module.out)
 # 设置编译器选项：O3优化，显示所有警告
 SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3 -Wall -g")
 #set(CMAKE_C_COMPILER "arm-none-linux-gnueabi-gcc")
 #set(CMAKE_CXX_COMPILE "arm-none-linux-gnueabi-g++")
 
+#add c++11
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
-SET(CMAKE_SYSTEM_NAME Linux) 
-SET(TOOLCHAIN_DIR "/home/xixian/my-imx6/03_tools/gcc-4.6.2-glibc-2.13-linaro-multilib-2011.12/fsl-linaro-toolchain") 
-set(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/bin/arm-none-linux-gnueabi-g++) 
+SET(CMAKE_SYSTEM_NAME Linux)
+SET(TOOLCHAIN_DIR "/home/xiangang/xiangang/arm-linux-gcc/gcc-4.6.2-glibc-2.13-linaro-multilib-2011.12/fsl-linaro-toolchain")
+set(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/bin/arm-none-linux-gnueabi-g++)
 set(CMAKE_C_COMPILER   ${TOOLCHAIN_DIR}/bin/arm-none-linux-gnueabi-gcc)
 
+message(STATUS "    CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
+message(STATUS "    CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
 
 
 # 定义头文件的路径变量
@@ -23,9 +27,7 @@ SET(INCLUDE_PATH ${PROJECT_SOURCE_DIR}/include)
 #头文件
 #include_directories(${PROJECT_SOURCE_DIR})
 #include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(/home/xixian/my-imx6/ffmpeg/ffmpeglib/include)
-
-
+include_directories(/home/xiangang/xiangang/ffmpeg/ffmpeglib/include)
 
 # 定义库文件路径
 SET(LIB_PATH ${PROJECT_SOURCE_DIR}/lib)
@@ -36,17 +38,14 @@ SET(SOURCE_PATH ${PROJECT_SOURCE_DIR}/src)
 MESSAGE(STATUS "Source Path , ${SOURCE_PATH}") 
 
 # 包含头文件搜索路径
-#INCLUDE_DIRECTORIES(${INCLUDE_PATH}) 
+INCLUDE_DIRECTORIES(${INCLUDE_PATH}) 
 
 # 包含库搜索路径
-LINK_DIRECTORIES(${LIB_PATH} ./lib)
-LINK_DIRECTORIES(${LIB_PATH} /home/xixian/my-imx6/ffmpeg/ffmpeglib/lib)
-
-
-
+#link_directories(${PROJECT_SOURCE_DIR}/lib)
+#link_directories(/home/xiangang/xiangang/ffmpeg/ffmpeglib/lib)
+LINK_DIRECTORIES(${LIB_PATH} /home/xiangang/xiangang/ffmpeg/ffmpeglib/lib)
 #****************************************************************************
-#add c++11
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+
 
 #3.head file path，头文件目录
 INCLUDE_DIRECTORIES(
@@ -72,19 +71,14 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
                                                                                   
 # 链接动态库
 #SET(LIBS_LIST libavcodec.so libavdevice.so libavfilter.so libavformat.so libavutil.so libpostproc.so libswresample.so libswscale.so)
-SET(LIBS_LIST libqsImgLib.so libipu.so libvpu.so libavcodec.so libavformat.so)
+SET(LIBS_LIST libqsImgLib.so libipu.so libvpu.so libavformat.so libswresample.so libavutil.so libpostproc.so)
 # 添加源文件路径下所有源文件存放到变量中(*.c && *.cpp)
 AUX_SOURCE_DIRECTORY(${SOURCE_PATH} SRC_LIST)
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-#set(OpenCV_DIR /home/xiangang/xiangang/opencv/arm-opencv-3.3.0)  
-#set(OpenCV_LIBS /usr/local/arm-opencv/lib)  
-#include_directories(/home/xiangang/xiangang/opencv/arm-opencv-3.3.0/include) 
-
-#find_package( OpenCV REQUIRED )
 
 # 设置生成可执行文件的名称
-SET(EXECUTABLE_FILE_NAME IMX6Q_VPU_Capture_Module.out)
+SET(EXECUTABLE_FILE_NAME iMX6Q_VPU_Capture_Module.out)
 
 # 生成可执行文件
 ADD_EXECUTABLE(${EXECUTABLE_FILE_NAME} ${SRC_LIST})
