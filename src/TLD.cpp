@@ -528,14 +528,14 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   //TLD中定义：cv::Mat pEx;  //positive NN example 大小为15*15图像片
   pEx.create(patch_size,patch_size,CV_64F);
   //Init Generator
-  generator = PatchGenerator(0,0,noise_init,true,1-scale_init,1+scale_init,-angle_init*CV_PI/180,angle_init*CV_PI/180,-angle_init*CV_PI/180,angle_init*CV_PI/180);
+  // generator = PatchGenerator(0,0,noise_init,true,1-scale_init,1+scale_init,-angle_init*CV_PI/180,angle_init*CV_PI/180,-angle_init*CV_PI/180,angle_init*CV_PI/180);
   
   //此函数根据传入的box（目标边界框），在整帧图像中的全部窗口中寻找与该box距离最小（即最相似，
   //重叠度最大）的num_closest_init个窗口，然后把这些窗口 归入good_boxes容器
   //同时，把重叠度小于0.2的，归入 bad_boxes 容器
   //首先根据overlap的比例信息选出重复区域比例大于60%并且前num_closet_init= 10个的最接近box的RectBox，
   //相当于对RectBox进行筛选。并通过BBhull函数得到这些RectBox的最大边界
-  getOverlappingBoxes(box,num_closest_init);
+  getOverlappingBoxes(num_closest_init);
   //printf("Found %d good boxes, %d bad boxes\n",(int)good_boxes.size(),(int)bad_boxes.size());
   //printf("Best Box: %d %d %d %d\n",best_box.x,best_box.y,best_box.width,best_box.height);
  // printf("Bounding box hull: %d %d %d %d\n",bbhull.x,bbhull.y,bbhull.width,bbhull.height);
@@ -1258,7 +1258,7 @@ void learn(const Mat& img)
   vector<pair<vector<int>,int> > fern_examples;
   good_boxes.clear();
   bad_boxes.clear();
-  getOverlappingBoxes(lastbox,num_closest_update);
+  getOverlappingBoxes(num_closest_update);
   if (good_boxes.size()>0)
     generatePositiveData(img,num_warps_update);
   else{
@@ -1343,7 +1343,7 @@ float bbOverlap(const BoundingBox& box1,const BoundingBox& box2){
   return intersection / (area1 + area2 - intersection);
 }
 
-void getOverlappingBoxes(const cv::Rect& box1,int num_closest){
+void getOverlappingBoxes(int num_closest){
   float max_overlap = 0;
   for (int i=0;i<grid.size();i++){
       if (grid[i].overlap > max_overlap) {
