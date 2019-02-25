@@ -242,7 +242,8 @@ void  *pth_det2(void *tt)
 
             patch = dec_mat(grid[idx]);
 
-            getPattern(patch,dtt.patch[0],mean,stdev);                //  Get pattern within bounding box
+            // getPattern(patch,dtt.patch[0],mean,stdev);                //  Get pattern within bounding box
+			MyGetPattern(patch, dtt.patch[0]);
 
             classifier.NNConf(dtt.patch[0],dtt.isin[0],dtt.conf1[0],dtt.conf2[0]);  //  Evaluate nearest neighbour classifier
             dtt.patt[0]=tmp.patt[idx];
@@ -310,7 +311,8 @@ void  *pth_det3(void *tt)
 
             patch = dec_mat(grid[idx]);
 
-            getPattern(patch,dtt4.patch[0],mean,stdev);                //  Get pattern within bounding box
+            // getPattern(patch,dtt4.patch[0],mean,stdev);                //  Get pattern within bounding box
+			MyGetPattern(patch, dtt4.patch[0]);
 
             classifier.NNConf(dtt4.patch[0],dtt4.isin[0],dtt4.conf1[0],dtt4.conf2[0]);  //  Evaluate nearest neighbour classifier
             dtt4.patt[0]=tmp.patt[idx];
@@ -640,7 +642,8 @@ void generatePositiveData(const Mat& frame, int num_warps)
 {
     Scalar mean;
     Scalar stdev;
-    getPattern(frame(best_box),pEx,mean,stdev);
+    // getPattern(frame(best_box),pEx,mean,stdev);
+	MyGetPattern(frame(best_box), pEx);
     //Get Fern features on warped patches
     Mat img;
     Mat warped;
@@ -672,12 +675,30 @@ void generatePositiveData(const Mat& frame, int num_warps)
 void getPattern(const Mat& img, Mat& pattern,Scalar& mean,Scalar& stdev)
 {
     //Output: resized Zero-Mean patch
-    resize(img,pattern,Size(patch_size,patch_size));
+    // resize(img,pattern,Size(patch_size,patch_size));
+	pattern = my_resize(img, patch_size, patch_size);
     meanStdDev(pattern,mean,stdev);
     pattern.convertTo(pattern,CV_32F);
     pattern = pattern-mean.val[0];
 }
+void MyGetPattern(const Mat& img, Mat& pattern)
+{
+	// resize(img,pattern,Size(patch_size,patch_size));
+    pattern = my_resize(img, patch_size, patch_size);
+    int meand = meanDev(pattern.data, pattern.cols, pattern.rows);
+    int i, j;
+    int h = pattern.rows;
+    int w = pattern.cols;
 
+	pattern.convertTo(pattern,CV_32F);
+    for(i = 0; i < h; i++)
+    {
+        for(j = 0; j < w; j++)
+        {
+            *(pattern.data + i * w + j) = *(pattern.data + i * w + j) - meand;
+        }
+    }
+}
 void generateNegativeData(const Mat& frame)
 {
     /* Inputs:
@@ -715,7 +736,8 @@ void generateNegativeData(const Mat& frame)
     {
         idx=bad_boxes[i];
         patch = frame(grid[idx]);
-        getPattern(patch,nEx[i],dum1,dum2);
+        // getPattern(patch,nEx[i],dum1,dum2);
+		MyGetPattern(patch, nEx[i]);
     }
     printf("NN: %d\n",(int)nEx.size());
 }
@@ -744,8 +766,8 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
 
 	Mat re_img1;
-    resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
-
+    // resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
+dec_mat = my_resize(img2, img2.cols/RESIZE_MULTIPLE, img2.rows/RESIZE_MULTIPLE);
     if(track_count == 0)
     {
         std::lock_guard<std::mutex> lk(mut);
@@ -754,8 +776,8 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     }
     track_count++;
 
-    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
-
+    // resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
+re_img1 = my_resize(img1, img1.cols/RESIZE_MULTIPLE, img1.rows/RESIZE_MULTIPLE);
     ///Track  跟踪模块
     if(lastboxfound && tl)
     {
@@ -1140,7 +1162,8 @@ void detect(const cv::Mat& frame)
             idx=dt.bb[i];                                                       //  Get the detected bounding box index
             patch = frame(grid[idx]);
             
-            getPattern(patch,dt.patch[i],mean,stdev);                //  Get pattern within bounding box
+            // getPattern(patch,dt.patch[i],mean,stdev);                //  Get pattern within bounding box
+			MyGetPattern(patch, dt.patch[i]);
 
             classifier.NNConf(dt.patch[i],dt.isin[i],dt.conf1[i],dt.conf2[i]);  //  Evaluate nearest neighbour classifier
 //            dt.patt[i]=tmp.patt[idx];

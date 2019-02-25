@@ -92,6 +92,7 @@ int detect_d4();
 int TLD_Pthread_destory(void);
 
 int TLD_Pthread_create(void);
+void MyGetPattern(const Mat& img, Mat& pattern);
 
 
 #endif

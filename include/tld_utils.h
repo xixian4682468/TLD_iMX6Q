@@ -1,8 +1,10 @@
 #include <opencv2/opencv.hpp>
 #pragma once
 
+using namespace cv;
+using namespace std;
 
-
+#define RESIZE_MULTIPLE 4
 
 void drawBox(cv::Mat& image, CvRect box, cv::Scalar color = cvScalarAll(255), int thick=1); 
 
@@ -14,3 +16,5 @@ float median(std::vector<float> v);
 
 std::vector<int> index_shuffle(int begin,int end);
 
+Mat my_resize(const Mat &img, int width, int height);
+int meanDev(unsigned char* src, int w, int h);
