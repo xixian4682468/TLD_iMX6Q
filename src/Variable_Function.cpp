@@ -538,7 +538,7 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 
 		Mat last_gray_resize;
 // imwrite("last_gray.bmp",last_gray);
-		resize(last_gray, last_gray_resize, Size(last_gray.cols/4, last_gray.rows/4));
+//		resize(last_gray, last_gray_resize, Size(last_gray.cols/4, last_gray.rows/4));
 		// imwrite("last_gray_resize.bmp",last_gray_resize);
 
 		//box_b.x = box_b.x / 4;
@@ -546,16 +546,11 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		//box_b.width = box_b.width / 4;
 		//box_b.height = box_b.height / 4;
 		
-		box_b.x = (Rec_Target_x-32) / 4;
-		box_b.y = (Rec_Target_y-32) / 4;
-		//printf("``````````````````````box_b.x:%d\n",box_b.x);
-		//printf("``````````````````````box_b.y:%d\n",box_b.y);
-		box_b.width  = 64 / 4;
-		box_b.height = 64 / 4;
-
-		
-// printf("box:%d %d %d %d \n", box.x, box.y, box.width, box.height);
-// imwrite("box.bmp",last_gray_resize(box));
+        box_b.x = (Rec_Target_x-32) - 260/*/ 4*/;
+        box_b.y = (Rec_Target_y-32) - 188/*/ 4*/;
+        box_b.width  = 64 /*/ 4*/;
+        box_b.height = 64 /*/ 4*/;
+        last_gray_resize = last_gray(Rect(260, 188, 200, 200));
 		init(last_gray_resize, box_b, bb_file);
 
 
@@ -587,10 +582,10 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		{
 			// drawPoints(current_gray, pts1);
 			// drawPoints(current_gray, pts2, Scalar());
-			draw_pbox.x = pbox.x*4;
-			draw_pbox.y = pbox.y*4;
-			draw_pbox.width = pbox.width*4;
-			draw_pbox.height = pbox.height*4;
+            draw_pbox.x = pbox.x + 260/**4*/;
+            draw_pbox.y = pbox.y + 188/**4*/;
+            draw_pbox.width = pbox.width/**4*/;
+            draw_pbox.height = pbox.height/**4*/;
            // drawBox(current_gray, draw_pbox);
            mubiaodiushi = 0;
 		   CCD_IR_Target_x = draw_pbox.x + draw_pbox.width/2;
