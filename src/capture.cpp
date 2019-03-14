@@ -308,6 +308,9 @@ v4l_get_capture_data(struct v4l2_buffer *buf)
 		{
 			DisPlay_Target_Bomen(CCD_IR_Target_x, CCD_IR_Target_y, Picture_576p, VPU_Camera_Resolution);
 		}
+
+        LCD_DrawRectangle(260, 188, 460, 388, Picture_576p, 576, 0);
+
 		memcpy(cap_buffers[buf->index].start, Picture_576p, 720*576*3/2);
 	}	
 	else if(VPU_Camera_Resolution == 512) //640*512
