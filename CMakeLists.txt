@@ -3,12 +3,12 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 # 项目名称 
 PROJECT(iMX6Q_VPU_Capture_Module.out)
 # 设置编译器选项：O3优化，显示所有警告
-SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3 -Wall -g")
+SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3")
 #set(CMAKE_C_COMPILER "arm-none-linux-gnueabi-gcc")
 #set(CMAKE_CXX_COMPILE "arm-none-linux-gnueabi-g++")
 
 #add c++11
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3")
 
 SET(CMAKE_SYSTEM_NAME Linux)
 SET(TOOLCHAIN_DIR "/home/xiangang/xiangang/arm-linux-gcc/gcc-4.6.2-glibc-2.13-linaro-multilib-2011.12/fsl-linaro-toolchain")
