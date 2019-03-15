@@ -195,7 +195,7 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
   {
 //      matchTemplate(pEx[i],example,ncc,CV_TM_CCORR_NORMED);      // measure NCC to positive examples
 //      nccP=(((float*)ncc.data)[0]+1)*0.5;
-      double ma = myTemplateMatch(&example, &pEx[i], example.cols, example.rows);
+      double ma = myTemplateMatch(&example, &pEx[i], 1);
       nccP = ((float)ma + 1) * 0.5;
 //      printf("matchTemplate:%f ma:%f\n",((float*)ncc.data)[0], ma);
       if (nccP>ncc_thesame)
@@ -218,7 +218,7 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
   {
 //      matchTemplate(nEx[i],example,ncc,CV_TM_CCORR_NORMED);     //measure NCC to negative examples
 //      nccN=(((float*)ncc.data)[0]+1)*0.5;
-      double ma = myTemplateMatch(&example, &nEx[i], example.cols, example.rows);
+      double ma = myTemplateMatch(&example, &nEx[i], 1);
       nccN = ((float)ma + 1) * 0.5;
       if (nccN>ncc_thesame)
         anyN=true;

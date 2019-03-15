@@ -86,89 +86,121 @@ void myResize(const unsigned char *dataSrc, unsigned char *dataDst, int src_widt
   }
 }
 
-double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h)
+double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method : 1 CV_TM_CCORR_NORMED  2 CV_TM_CCOEFF_NORMED*/
 {
+    int i, j, m, n;
+    double dSumT,dSumTT;
+    double dSumS,dSumSS;
+    double dSumST;
+    double R;
 
-    int nr= pTemplate->rows; // number of rows
-    int nc= pTemplate->cols * pTemplate->channels(); // total number of elements per line
-    uchar pTemplate_data[nc*nr];
-    for (int j=0; j<nr; j++)
+    double MaxR;
+
+    int nMaxX;
+    int nMaxY;
+    int nHeight = src->rows;
+    int nWidth = src->cols;
+
+    int nTplHeight = pTemplate->rows;
+    int nTplWidth = pTemplate->cols;
+
+    if (method == 1)
     {
-      const uchar* data= pTemplate->ptr<uchar>(j);
-      for (int i=0; i<nc; i++)
-      {
-        pTemplate_data[nc * j + i]= data[i];
-      }
-    }
-
-    int nrs= src->rows; // number of rows
-    int ncs= src->cols * src->channels(); // total number of elements per line
-    uchar src_data[ncs*nrs];
-    for (int j=0; j<nrs; j++)
-    {
-      const uchar* data= src->ptr<uchar>(j);
-      for (int i=0; i<ncs; i++)
-      {
-        src_data[ncs * j + i]= data[i];
-      }
-    }
-
-
-  int i, j, m, n;
-  double dSumT;
-  double dSumS;
-  double dSumST;
-  double R;
-
-  double MaxR;
-
-  int nMaxX;
-  int nMaxY;
-  int nHeight = /*src->rows*/ h;
-  int nWidth = /*src->cols*/ w;
-
-  int nTplHeight = /*pTemplate->rows*/ h;
-  int nTplWidth = /*pTemplate->cols*/ w;
-
-
-  dSumT = 0;
-  for (m = 0; m < nTplHeight; m++)
-  {
-    for (n = 0; n < nTplWidth; n++)
-    {
-
-            int nGray =/**pTemplate->ptr(m, n)*/ *(pTemplate_data + m * nTplWidth + n);
-      dSumT += (double)nGray*nGray;
-    }
-  }
-
-
-  MaxR = 0;
-  for (i = 0; i < nHeight - nTplHeight + 1; i++)
-  {
-    for (j = 0; j < nWidth - nTplWidth + 1; j++)
-    {
-      dSumST = 0;
-      dSumS = 0;
-      for (m = 0; m < nTplHeight; m++)
-      {
-        for (n = 0; n < nTplWidth; n++)
+        dSumT = 0;
+        for (m = 0; m < nTplHeight; m++)
         {
-            int nGraySrc = /**src->ptr(i + m, j + n)*/ *(src_data + (i + m) * nTplWidth + j + n);
-            int nGrayTpl = /**pTemplate->ptr(m, n)*/ *(pTemplate_data + m * nTplWidth + n);
-            dSumS += (double)nGraySrc*nGraySrc;
-            dSumST += (double)nGraySrc*nGrayTpl;
+            for (n = 0; n < nTplWidth; n++)
+            {
+                int nGray =*pTemplate->ptr(m, n);
+                dSumT += (double)nGray*nGray;
+            }
         }
-      }
-      R = dSumST / (sqrt(dSumS)*sqrt(dSumT));
 
-      if (R > MaxR)
-      {
-        MaxR = R;
-        nMaxX = j;
-        nMaxY = i;
-      }
+        MaxR = 0;
+        for (i = 0; i < nHeight - nTplHeight + 1; i++)
+        {
+            for (j = 0; j < nWidth - nTplWidth + 1; j++)
+            {
+                dSumST = 0;
+                dSumS = 0;
+                for (m = 0; m < nTplHeight; m++)
+                {
+                    for (n = 0; n < nTplWidth; n++)
+                    {
+                        int nGraySrc = *src->ptr(i + m, j + n);
+                        int nGrayTpl = *pTemplate->ptr(m, n);
+                        dSumS += (double)nGraySrc*nGraySrc;
+                        dSumST += (double)nGraySrc*nGrayTpl;
+                    }
+                }
+                R = dSumST / (sqrt(dSumS)*sqrt(dSumT));
+                if (R > MaxR)
+                {
+                    MaxR = R;
+                    nMaxX = j;
+                    nMaxY = i;
+
+                }
+            }
+        }
     }
-  }
-return MaxR;
+    else if (method == 2)
+    {
+        dSumT = 0;
+        for (m = 0; m < nTplHeight; m++)
+        {
+            for (n = 0; n < nTplWidth; n++)
+            {
+                int nGray =*pTemplate->ptr(m, n);
+                dSumT  += (double)nGray;
+            }
+        }
+        dSumT = dSumT/(nTplHeight*nTplWidth);
+
+        MaxR = 0;
+        for (i = 0; i < nHeight - nTplHeight + 1; i++)
+        {
+            for (j = 0; j < nWidth - nTplWidth + 1; j++)
+            {
+                dSumS = 0;
+                dSumSS =0;
+                dSumTT =0;
+                dSumST = 0;
+                for (m = 0; m < nTplHeight; m++)
+                {
+                    for (n = 0; n < nTplWidth; n++)
+                    {
+
+                        int nGraySrc = *src->ptr(i + m, j + n);
+                        dSumS += (double)nGraySrc;
+                    }
+                }
+                dSumS = dSumS/(nTplHeight*nTplHeight);
+                for (m = 0; m < nTplHeight; m++)
+                {
+                    for (n = 0; n < nTplWidth; n++)
+                    {
+
+                        int nGraySrc = *src->ptr(i + m, j + n);
+
+                        int nGrayTpl = *pTemplate->ptr(m, n);
+
+                        double TT = ((double)nGrayTpl-dSumT) ;
+                        double SS = ((double)nGraySrc-dSumS) ;
+                        dSumTT  += TT*TT;
+                        dSumSS  += SS*SS;
+                        dSumST += (TT*SS);
+                    }
+                }
+                R= dSumST/(sqrt(dSumTT)*sqrt(dSumSS));
+                if (R > MaxR)
+                {
+                    MaxR = R;
+                    nMaxX = j;
+                    nMaxY = i;
+                }
+            }
+        }
+    }
+    return MaxR;
 }

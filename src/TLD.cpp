@@ -773,6 +773,8 @@ int getVar(const BoundingBox& box,const Mat& sum,const Mat& sqsum)
 
 void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& points1,vector<Point2f>& points2,BoundingBox& bbnext,bool& lastboxfound, bool tl, FILE* bb_file)
 {
+
+    double ptt = (double)getTickCount();
     vector<BoundingBox> cbb;
     vector<float> cconf;
     int confident_detections=0;
@@ -902,8 +904,11 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     // 	fprintf(bb_file,"NaN,NaN,NaN,NaN,NaN\n");
 
     ///learn 学习模块
-     if (lastvalid && tl)
-        learn(/*img2*/dec_mat);
+//     if (lastvalid && tl)
+//        learn(/*img2*/dec_mat);
+
+    ptt=(double)getTickCount()-ptt;
+    printf("xiangang----------------------------------->processFrame Run-time: %gms\n", ptt*1000/getTickFrequency());
 }
 
 
@@ -950,28 +955,28 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 
 		//Estimate Confidence and Validity
 		//评估跟踪确信度和有效性
-		Mat pattern;
-		Scalar mean, stdev;
-		BoundingBox bb;
-		bb.x = max(tbb.x,0);
-		bb.y = max(tbb.y,0);
-		bb.width = min(min(img2.cols-tbb.x,tbb.width),min(tbb.width,tbb.br().x));
-		bb.height = min(min(img2.rows-tbb.y,tbb.height),min(tbb.height,tbb.br().y));
+//		Mat pattern;
+//		Scalar mean, stdev;
+//		BoundingBox bb;
+//		bb.x = max(tbb.x,0);
+//		bb.y = max(tbb.y,0);
+//		bb.width = min(min(img2.cols-tbb.x,tbb.width),min(tbb.width,tbb.br().x));
+//		bb.height = min(min(img2.rows-tbb.y,tbb.height),min(tbb.height,tbb.br().y));
 		
-		//归一化img2(bb)对应的patch的size（放缩至patch_size = 15*15），存入pattern
-		getPattern(img2(bb),pattern,mean,stdev);
-		vector<int> isin;
-		float dummy;
+//		//归一化img2(bb)对应的patch的size（放缩至patch_size = 15*15），存入pattern
+//		getPattern(img2(bb),pattern,mean,stdev);
+//		vector<int> isin;
+//		float dummy;
 		
-		//计算图像片pattern到在线模型M的保守相似度
-		classifier.NNConf(pattern,isin,dummy,tconf); //Conservative Similarity
-		tvalid = lastvalid;
+//		//计算图像片pattern到在线模型M的保守相似度
+//		classifier.NNConf(pattern,isin,dummy,tconf); //Conservative Similarity
+//		tvalid = lastvalid;
 		
-		//保守相似度大于阈值，则评估跟踪有效
-		if (tconf>classifier.thr_nn_valid)
-		{
-			tvalid =true;
-		}
+//		//保守相似度大于阈值，则评估跟踪有效
+//		if (tconf>classifier.thr_nn_valid)
+//		{
+//			tvalid =true;
+//		}
 
 	}
 	else
@@ -984,7 +989,7 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 //网格均匀撒点，box共10*10=100个特征点
 void bbPoints(vector<cv::Point2f>& points,const BoundingBox& bb)
 {
-    int max_pts = 5;
+    int max_pts = 7;
     int margin_h = 0;
     int margin_v = 0;
     int stepx = ceil((bb.width-2*margin_h)/max_pts);
@@ -1222,12 +1227,6 @@ void detect(const cv::Mat& frame)
 //    t333=(double)getTickCount()-t333;
 //    printf("xiangang----------------------------------->detect222 Run-time: %gms\n", t333*1000/getTickFrequency());
 
-//    maxx = 0;
-//    th_max = 0;
-//    sec_max = 0;
-//	maxx_num = 0;
-//	sec_max_num = 0;
-//	th_max_num = 0;
 }
 
 void evaluate()
@@ -1300,7 +1299,7 @@ void learn(const Mat& img)
   /// Classifiers update
   classifier.trainF(fern_examples,2);
   classifier.trainNN(nn_examples);
-//  classifier.show();
+  classifier.show();
 }
 
 void buildGrid(const cv::Mat& img, const cv::Rect& box)
@@ -1314,7 +1313,7 @@ void buildGrid(const cv::Mat& img, const cv::Rect& box)
     BoundingBox bbox;
     Size scale;
     int sc=0;
-    for (int s=10;s<11;s++)
+    for (int s=8;s<13;s++)
     {
         width = round(box.width*SCALES[s]);
         height = round(box.height*SCALES[s]);

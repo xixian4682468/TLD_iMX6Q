@@ -15,6 +15,7 @@ float median(std::vector<float> v);
 
 std::vector<int> index_shuffle(int begin,int end);
 void myResize(const unsigned char *dataSrc, unsigned char *dataDst, int src_width, int src_height, int width, int height);
-double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h);
+//double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h);
+double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ); /*method : 1 CV_TM_CCORR_NORMED  2 CV_TM_CCOEFF_NORMED*/
 
 
