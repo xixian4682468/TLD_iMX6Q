@@ -69,6 +69,8 @@ void LKTracker::normCrossCorrelation(const Mat& img1,const Mat& img2, vector<Poi
 			//CV_TM_CCOEFF_NORMED 归一化相关系数匹配法
 			//参数分别为：欲搜索的图像。搜索模板。比较结果的映射图像。指定匹配方法
 			matchTemplate( rec0,rec1, res, CV_TM_CCOEFF_NORMED);
+//            double ma = myTemplateMatch(&rec0, &rec1, 10, 10);
+//            printf("matchTemplate:%f, ma:%f\n", ((float *)(res.data))[0], ma);
 			similarity[i] = ((float *)(res.data))[0];//得到各个特征点的相似度大小
 
 		} 

@@ -192,7 +192,7 @@ void  *pth_test(void *tt)
         t=(double)getTickCount()-t;
         printf("xiangang----------------------------------->detect Run-time: %gms\n", t*1000/getTickFrequency());
 
-        //isdetect = false;
+//        isdetect = false;
         lk.unlock();
     }
 	printf("**************************************************destory pth_test\n");
@@ -524,7 +524,7 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   bad_boxes.reserve(grid.size());
   
   //TLD中定义：cv::Mat pEx;  //positive NN example 大小为15*15图像片
-  pEx.create(patch_size,patch_size,CV_64F);
+  pEx.create(patch_size,patch_size,CV_8U);
   //Init Generator
   generator = PatchGenerator(0,0,noise_init,true,1-scale_init,1+scale_init,-angle_init*CV_PI/180,angle_init*CV_PI/180,-angle_init*CV_PI/180,angle_init*CV_PI/180);
   
@@ -902,8 +902,8 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     // 	fprintf(bb_file,"NaN,NaN,NaN,NaN,NaN\n");
 
     ///learn 学习模块
-    // if (lastvalid && tl)
-    // 	learn(img2);
+     if (lastvalid && tl)
+        learn(/*img2*/dec_mat);
 }
 
 
@@ -947,7 +947,7 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 			printf("Too unstable predictions FB error=%f\n",tracker.getFB());
 			return;
 		}
-		/*
+
 		//Estimate Confidence and Validity
 		//评估跟踪确信度和有效性
 		Mat pattern;
@@ -972,7 +972,7 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 		{
 			tvalid =true;
 		}
-		*/
+
 	}
 	else
 		printf("No points tracked\n");
@@ -1147,7 +1147,7 @@ void detect(const cv::Mat& frame)
     dt.conf1 = vector<float>(detections);                                //  Relative Similarity (for final nearest neighbour classifier)
     dt.conf2 =vector<float>(detections);                                 //  Conservative Similarity (for integration with tracker)
     dt.isin = vector<vector<int> >(detections,vector<int>(3,-1));        //  Detected (isin=1) or rejected (isin=0) by nearest neighbour classifier
-    dt.patch = vector<Mat>(detections,Mat(patch_size,patch_size,CV_32F));//  Corresponding patches
+    dt.patch = vector<Mat>(detections,Mat(patch_size,patch_size,/*CV_32F*/CV_8U));//  Corresponding patches
     int idx;
     Scalar mean, stdev;
     float nn_th = classifier.getNNTh();
@@ -1245,7 +1245,7 @@ void learn(const Mat& img)
   bb.width = min(min(img.cols-lastbox.x,lastbox.width),min(lastbox.width,lastbox.br().x));
   bb.height = min(min(img.rows-lastbox.y,lastbox.height),min(lastbox.height,lastbox.br().y));
   Scalar mean, stdev;
-  Mat pattern;
+  Mat pattern = Mat::zeros(bb.height, bb.width, CV_8U);
   getPattern(img(bb),pattern,mean,stdev);
   vector<int> isin;
   float dummy, conf;
@@ -1265,7 +1265,7 @@ void learn(const Mat& img)
       lastvalid=false;
       return;
   }
-/// Data generation
+/// Data generation 重新计算重叠度
   for (int i=0;i<grid.size();i++){
       grid[i].overlap = bbOverlap(lastbox,grid[i]);
   }
@@ -1300,7 +1300,7 @@ void learn(const Mat& img)
   /// Classifiers update
   classifier.trainF(fern_examples,2);
   classifier.trainNN(nn_examples);
-  classifier.show();
+//  classifier.show();
 }
 
 void buildGrid(const cv::Mat& img, const cv::Rect& box)

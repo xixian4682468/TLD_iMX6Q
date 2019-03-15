@@ -88,6 +88,32 @@ void myResize(const unsigned char *dataSrc, unsigned char *dataDst, int src_widt
 
 double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h)
 {
+
+    int nr= pTemplate->rows; // number of rows
+    int nc= pTemplate->cols * pTemplate->channels(); // total number of elements per line
+    uchar pTemplate_data[nc*nr];
+    for (int j=0; j<nr; j++)
+    {
+      const uchar* data= pTemplate->ptr<uchar>(j);
+      for (int i=0; i<nc; i++)
+      {
+        pTemplate_data[nc * j + i]= data[i];
+      }
+    }
+
+    int nrs= src->rows; // number of rows
+    int ncs= src->cols * src->channels(); // total number of elements per line
+    uchar src_data[ncs*nrs];
+    for (int j=0; j<nrs; j++)
+    {
+      const uchar* data= src->ptr<uchar>(j);
+      for (int i=0; i<ncs; i++)
+      {
+        src_data[ncs * j + i]= data[i];
+      }
+    }
+
+
   int i, j, m, n;
   double dSumT;
   double dSumS;
@@ -111,7 +137,7 @@ double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h)
     for (n = 0; n < nTplWidth; n++)
     {
 
-            int nGray =/**pTemplate->ptr(m, n)*/ *(pTemplate->data + m * nTplWidth + n);
+            int nGray =/**pTemplate->ptr(m, n)*/ *(pTemplate_data + m * nTplWidth + n);
       dSumT += (double)nGray*nGray;
     }
   }
@@ -128,8 +154,8 @@ double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h)
       {
         for (n = 0; n < nTplWidth; n++)
         {
-            int nGraySrc = /**src->ptr(i + m, j + n)*/ *(src->data + (i + m) * nTplWidth + j + n);
-            int nGrayTpl = /**pTemplate->ptr(m, n)*/ *(pTemplate->data + m * nTplWidth + n);
+            int nGraySrc = /**src->ptr(i + m, j + n)*/ *(src_data + (i + m) * nTplWidth + j + n);
+            int nGrayTpl = /**pTemplate->ptr(m, n)*/ *(pTemplate_data + m * nTplWidth + n);
             dSumS += (double)nGraySrc*nGraySrc;
             dSumST += (double)nGraySrc*nGrayTpl;
         }

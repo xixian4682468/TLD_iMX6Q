@@ -151,8 +151,10 @@ void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples){
           pEx.push_back(nn_examples[i]);
       }                                                            //    end
       if(y[i]==0 && conf>0.5)                                      //  if y(i) == 0 && conf1 > 0.5
-        nEx.push_back(nn_examples[i]);                             //    tld.nex = [tld.nex x(:,i)];
-
+      {
+//          imwrite("nn_examples.jpg", nn_examples[i]);
+          nEx.push_back(nn_examples[i]);                             //    tld.nex = [tld.nex x(:,i)];
+      }
   }                                                                 //  end
   acum++;
   printf("%d. Trained NN examples: %d positive %d negative\n",acum,(int)pEx.size(),(int)nEx.size());
@@ -211,6 +213,7 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
 
 // double t2 = (double)getTickCount();
 // printf("xiangang->nEx.size():%d\n", nEx.size());
+
   for (int i=0;i<nEx.size();i++)
   {
 //      matchTemplate(nEx[i],example,ncc,CV_TM_CCORR_NORMED);     //measure NCC to negative examples
@@ -222,7 +225,6 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
       if(nccN > maxN)
         maxN=nccN;
   }
-
     // t2=(double)getTickCount()-t2;
     // printf("xiangang->nex %gms\n", t2*1000/getTickFrequency());
 
@@ -268,5 +270,5 @@ void FerNNClassifier::show(){
     Mat tmp = examples.rowRange(Range(i*pEx[i].rows,(i+1)*pEx[i].rows));
     ex.convertTo(tmp,CV_8U);
   }
-  imshow("Examples",examples);
+//  imshow("Examples",examples);
 }
