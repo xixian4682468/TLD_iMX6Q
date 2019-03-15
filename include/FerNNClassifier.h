@@ -7,6 +7,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
+#include "tld_utils.h"
 class FerNNClassifier{
 private:
   float thr_fern;

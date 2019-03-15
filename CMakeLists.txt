@@ -3,11 +3,14 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 # 项目名称 
 PROJECT(iMX6Q_VPU_Capture_Module.out)
 # 设置编译器选项：O3优化，显示所有警告
-SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3")
+
 #set(CMAKE_C_COMPILER "arm-none-linux-gnueabi-gcc")
 #set(CMAKE_CXX_COMPILE "arm-none-linux-gnueabi-g++")
 
-#add c++11
+#add c++11 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
+#SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard")
+SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3")
 
 SET(CMAKE_SYSTEM_NAME Linux)

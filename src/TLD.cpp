@@ -224,7 +224,7 @@ void  *pth_det2(void *tt)
     dtt.conf1 = vector<float>(1);                                //  Relative Similarity (for final nearest neighbour classifier)
     dtt.conf2 =vector<float>(1);                                 //  Conservative Similarity (for integration with tracker)
     dtt.isin = vector<vector<int> >(1,vector<int>(3,-1));        //  Detected (isin=1) or rejected (isin=0) by nearest neighbour classifier
-    dtt.patch = vector<Mat>(1,Mat(patch_size,patch_size,CV_32F));//  Corresponding patches
+    dtt.patch = vector<Mat>(1,Mat(patch_size,patch_size,/*CV_32F*/CV_8U));//  Corresponding patches
 
         while(Pth_destory_Flag)
         {
@@ -554,12 +554,12 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   generatePositiveData(frame1,num_warps_init);
   
   // Set variance threshold
-  Scalar stdev, mean;
+//  Scalar stdev, mean;
   
   //统计best_box的均值和标准差
   ////例如需要提取图像A的某个ROI（感兴趣区域，由矩形框）的话，用Mat类的B=img(ROI)即可提取
   //frame1(best_box)就表示在frame1中提取best_box区域（目标区域）的图像片
-  meanStdDev(frame1(best_box),mean,stdev);
+//  meanStdDev(frame1(best_box),mean,stdev);
   
   
   //利用积分图像去计算每个待检测窗口的方差
@@ -571,13 +571,13 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   
 	//级联分类器模块一：方差检测模块，利用积分图计算每个待检测窗口的方差，方差大于var阈值（目标patch方差的50%）的，
   //则认为其含有前景目标方差；var 为标准差的平方
-  var = pow(stdev.val[0],2)*0.5; //getVar(best_box,iisum,iisqsum);
-  cout << "variance: " << var << endl;
+//  var = pow(stdev.val[0],2)*0.5; //getVar(best_box,iisum,iisqsum);
+//  cout << "variance: " << var << endl;
   
   //check variance
   double vr =  getVar(best_box,iisum,iisqsum)*0.5;
   cout << "check variance: " << vr << endl;
-  
+  var = vr;
   // Generate negative data
   generateNegativeData(frame1);
   
@@ -672,9 +672,45 @@ void generatePositiveData(const Mat& frame, int num_warps)
 void getPattern(const Mat& img, Mat& pattern,Scalar& mean,Scalar& stdev)
 {
     //Output: resized Zero-Mean patch
-    resize(img,pattern,Size(patch_size,patch_size));
+//    resize(img,pattern,Size(patch_size,patch_size));
+pattern = Mat::zeros(patch_size, patch_size, CV_8U);
+//    img
+    int nr= img.rows; // number of rows
+    int nc= img.cols * img.channels(); // total number of elements per line
+    uchar img_data[nc*nr];
+    for (int j=0; j<nr; j++)
+    {
+      const uchar* data= img.ptr<uchar>(j);
+      for (int i=0; i<nc; i++)
+      {
+        img_data[nc * j + i]= data[i];
+      }
+    }
+
+//    pattern
+    int nrp= pattern.rows; // number of rows
+    int ncp= pattern.cols * pattern.channels(); // total number of elements per line
+    uchar pattern_data[ncp*nrp];
+    for (int j=0; j<nrp; j++)
+    {
+      const uchar* data= pattern.ptr<uchar>(j);
+      for (int i=0; i<ncp; i++)
+      {
+        pattern_data[ncp * j + i]= data[i];
+      }
+    }
+    myResize(img_data, pattern_data, img.cols, img.rows, patch_size, patch_size);
+    for (int j=0; j<nrp; j++)
+    {
+      uchar* data= pattern.ptr<uchar>(j);
+      for (int i=0; i<ncp; i++)
+      {
+        data[i] = pattern_data[ncp * j + i];
+      }
+    }
+
     meanStdDev(pattern,mean,stdev);
-    pattern.convertTo(pattern,CV_32F);
+//    pattern.convertTo(pattern,CV_32F);
     pattern = pattern-mean.val[0];
 }
 
@@ -1219,7 +1255,7 @@ void learn(const Mat& img)
       lastvalid =false;
       return;
   }
-  if (pow(stdev.val[0],2)<var){
+  if ((stdev.val[0] * stdev.val[0])<var){
       printf("Low variance..not training\n");
       lastvalid=false;
       return;

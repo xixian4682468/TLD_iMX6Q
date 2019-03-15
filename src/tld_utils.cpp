@@ -1,6 +1,5 @@
 #include <tld_utils.h>
-using namespace cv;
-using namespace std;
+
 
 void drawBox(Mat& image, CvRect box, Scalar color, int thick)
 {
@@ -40,3 +39,110 @@ vector<int> index_shuffle(int begin,int end)
 	return indexes;
 }
 
+void myResize(const unsigned char *dataSrc, unsigned char *dataDst, int src_width, int src_height, int width, int height)
+{
+  double xRatio = (double)src_width / width;
+  double yRatio = (double)src_height / height;
+
+  for (int i = 0; i < height; i++)
+  {
+        double srcY = (i + 0.5) * yRatio - 0.5;//源图像“虚”坐标的y值
+    int IntY = (int)srcY;//向下取整
+    double v = srcY - IntY;//获取小数部分
+    double v1 = 1.0 - v;
+    for (int j = 0; j < width; j++)
+    {
+            double srcX = (j + 0.5) * xRatio - 0.5;//源图像“虚”坐标的x值
+        int IntX = (int)srcX;//向下取整
+        double u = srcX - IntX;//获取小数部分
+        double u1 = 1.0 - u;
+
+        int Index00 = IntY * src_width + IntX;//得到原图左上角的像素位置
+        int Index10;                            //原图左下角的像素位置
+        if (IntY < src_height - 1)
+        {
+            Index10 = Index00 + src_width;
+        }
+        else
+        {
+            Index10 = Index00;
+        }
+        int Index01;                            //原图右上角的像素位置
+        int Index11;                            //原图右下角的像素位置
+        if (IntX < src_width - 1)
+        {
+            Index01 = Index00 + 1;
+            Index11 = Index10 + 1;
+        }
+        else
+        {
+            Index01 = Index00;
+            Index11 = Index10;
+        }
+        int temp0 = (int)(v1 * (u * dataSrc[Index01] + u1 * dataSrc[Index00]) +
+                        v * (u * dataSrc[Index11] + u1 * dataSrc[Index10]));
+      *(dataDst + i*width + j) = temp0;
+    }
+  }
+}
+
+double myTemplateMatch(const Mat * pTemplate, const Mat * src, int w, int h)
+{
+  int i, j, m, n;
+  double dSumT;
+  double dSumS;
+  double dSumST;
+  double R;
+
+  double MaxR;
+
+  int nMaxX;
+  int nMaxY;
+  int nHeight = /*src->rows*/ h;
+  int nWidth = /*src->cols*/ w;
+
+  int nTplHeight = /*pTemplate->rows*/ h;
+  int nTplWidth = /*pTemplate->cols*/ w;
+
+
+  dSumT = 0;
+  for (m = 0; m < nTplHeight; m++)
+  {
+    for (n = 0; n < nTplWidth; n++)
+    {
+
+            int nGray =/**pTemplate->ptr(m, n)*/ *(pTemplate->data + m * nTplWidth + n);
+      dSumT += (double)nGray*nGray;
+    }
+  }
+
+
+  MaxR = 0;
+  for (i = 0; i < nHeight - nTplHeight + 1; i++)
+  {
+    for (j = 0; j < nWidth - nTplWidth + 1; j++)
+    {
+      dSumST = 0;
+      dSumS = 0;
+      for (m = 0; m < nTplHeight; m++)
+      {
+        for (n = 0; n < nTplWidth; n++)
+        {
+            int nGraySrc = /**src->ptr(i + m, j + n)*/ *(src->data + (i + m) * nTplWidth + j + n);
+            int nGrayTpl = /**pTemplate->ptr(m, n)*/ *(pTemplate->data + m * nTplWidth + n);
+            dSumS += (double)nGraySrc*nGraySrc;
+            dSumST += (double)nGraySrc*nGrayTpl;
+        }
+      }
+      R = dSumST / (sqrt(dSumS)*sqrt(dSumT));
+
+      if (R > MaxR)
+      {
+        MaxR = R;
+        nMaxX = j;
+        nMaxY = i;
+      }
+    }
+  }
+return MaxR;
+}

@@ -62,9 +62,12 @@ void FerNNClassifier::prepare(const vector<Size>& scales){
   //Initialize Posteriors
   for (int i = 0; i<nstructs; i++) 
   {
-      posteriors.push_back(vector<float>(pow(2.0,structSize), 0));
-      pCounter.push_back(vector<int>(pow(2.0,structSize), 0));
-      nCounter.push_back(vector<int>(pow(2.0,structSize), 0));
+//      posteriors.push_back(vector<float>(pow(2.0,structSize), 0));
+//      pCounter.push_back(vector<int>(pow(2.0,structSize), 0));
+//      nCounter.push_back(vector<int>(pow(2.0,structSize), 0));
+      posteriors.push_back(vector<float>(8092, 0));
+      pCounter.push_back(vector<int>(8092, 0));
+      nCounter.push_back(vector<int>(8092, 0));
   }
 }
 
@@ -177,7 +180,7 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
       csconf=1;
       return;
   }
-  Mat ncc(1,1,CV_32F);
+  Mat ncc(1,1,/*CV_32F*/CV_8U);
   float nccP,csmaxP,maxP=0;
   bool anyP=false;
   int maxPidx,validatedPart = ceil(pEx.size()*valid);
@@ -190,6 +193,8 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
   {
       matchTemplate(pEx[i],example,ncc,CV_TM_CCORR_NORMED);      // measure NCC to positive examples
       nccP=(((float*)ncc.data)[0]+1)*0.5;
+      double ma = myTemplateMatch(&example, &pEx[i], example.cols, example.rows);
+      nccP = ((float)ma + 1) * 0.5;
       if (nccP>ncc_thesame)
         anyP=true;
       if(nccP > maxP){
@@ -207,8 +212,10 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
 // printf("xiangang->nEx.size():%d\n", nEx.size());
   for (int i=0;i<nEx.size();i++)
   {
-      matchTemplate(nEx[i],example,ncc,CV_TM_CCORR_NORMED);     //measure NCC to negative examples
-      nccN=(((float*)ncc.data)[0]+1)*0.5;
+//      matchTemplate(nEx[i],example,ncc,CV_TM_CCORR_NORMED);     //measure NCC to negative examples
+//      nccN=(((float*)ncc.data)[0]+1)*0.5;
+      double ma = myTemplateMatch(&example, &nEx[i], example.cols, example.rows);
+      nccN = ((float)ma + 1) * 0.5;
       if (nccN>ncc_thesame)
         anyN=true;
       if(nccN > maxN)

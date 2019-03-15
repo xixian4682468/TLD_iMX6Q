@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <condition_variable>
 #include <mutex>
+#include "tld_utils.h"
 
 //Bounding Boxes
 struct BoundingBox : public cv::Rect 
