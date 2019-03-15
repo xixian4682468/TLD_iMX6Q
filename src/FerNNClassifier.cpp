@@ -191,10 +191,11 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
 // printf("xiangang->pEx.size():%d\n", pEx.size());
   for (int i=0;i<pEx.size();i++)
   {
-      matchTemplate(pEx[i],example,ncc,CV_TM_CCORR_NORMED);      // measure NCC to positive examples
-      nccP=(((float*)ncc.data)[0]+1)*0.5;
+//      matchTemplate(pEx[i],example,ncc,CV_TM_CCORR_NORMED);      // measure NCC to positive examples
+//      nccP=(((float*)ncc.data)[0]+1)*0.5;
       double ma = myTemplateMatch(&example, &pEx[i], example.cols, example.rows);
       nccP = ((float)ma + 1) * 0.5;
+//      printf("matchTemplate:%f ma:%f\n",((float*)ncc.data)[0], ma);
       if (nccP>ncc_thesame)
         anyP=true;
       if(nccP > maxP){
