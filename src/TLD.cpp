@@ -114,6 +114,10 @@ std::mutex mut;
 std::condition_variable data_cond;
 Mat dec_mat;
 Mat img_det;
+bool isdetect_det;
+std::mutex mut_det;
+std::condition_variable data_cond_det;
+
 
 /* detect相似度第二个线程控制  */
 int g_idx2;
@@ -183,7 +187,7 @@ void  *pth_test(void *tt)
     {
         std::unique_lock<std::mutex> lk(mut);
         data_cond.wait(lk, []{return isdetect;});
-
+printf("Set\n");
         // sleep(2);
         count++;
         // _this->summ++;
@@ -192,7 +196,12 @@ void  *pth_test(void *tt)
         t=(double)getTickCount()-t;
         printf("xiangang----------------------------------->detect Run-time: %gms\n", t*1000/getTickFrequency());
 
-//        isdetect = false;
+        std::lock_guard<std::mutex> lk_det(mut_det);
+        isdetect_det = true;
+        data_cond_det.notify_one();
+        
+        
+       isdetect = false;
         lk.unlock();
     }
 	printf("**************************************************destory pth_test\n");
@@ -374,7 +383,7 @@ void  *pth_det4(void *tt)
             float fern_th = classifier.getFernTh();
             vector <int> ferns(10);
             float conf_pro = numtrees*fern_th;
-//            double t = (double)getTickCount();
+           double t = (double)getTickCount();
 
     //      main
 
@@ -392,22 +401,14 @@ void  *pth_det4(void *tt)
                     if (conf>conf_pro)
                     {
                         //只取前三位conf
-//                        if(conf > maxx)
-//                        {
-//                            th_max = sec_max;
-//                            th_max_num = sec_max_num;
-//                            sec_max = maxx;
-//                            sec_max_num = maxx_num;
-//                            maxx = conf;
-//                            maxx_num = i;
                             dt.bb.push_back(i);
 //                        }
                     }
                 }
             }
 
-//            t=(double)getTickCount() - t;
-//            printf("xiangang----------------------------------->detect grid-time: %gms\n", t*1000/getTickFrequency());
+           t=(double)getTickCount() - t;
+           printf("xiangang----------------------------------->detect2 grid-time: %gms\n", t*1000/getTickFrequency());
 
 
             std::unique_lock<std::mutex> lk4_4(mut_det4_4);
@@ -451,6 +452,7 @@ void read(const FileNode& file)
 {
     //控制量初始化为false，线程等待
     isdetect = false;
+    isdetect_det = false;
     isdetect2 = false;
     isdetect3 = false;
     isdetect4 = false;
@@ -792,7 +794,7 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
         isdetect = true;
         data_cond.notify_one();
     }
-    track_count++;
+    // track_count++;
 
 //    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
     re_img1 = img1(Rect(260, 188, 200, 200));
@@ -904,6 +906,11 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     // 	fprintf(bb_file,"%d,%d,%d,%d,%f\n",lastbox.x,lastbox.y,lastbox.br().x,lastbox.br().y,lastconf);
     // else
     // 	fprintf(bb_file,"NaN,NaN,NaN,NaN,NaN\n");
+
+   std::unique_lock<std::mutex> lk_det(mut_det);
+   data_cond_det.wait(lk_det, []{return isdetect_det;});
+   isdetect_det = false;
+   lk_det.unlock();
 
     ///learn 学习模块
     if (lastvalid && tl)
@@ -1107,17 +1114,7 @@ void detect(const cv::Mat& frame)
             tmp.patt[i]=ferns;
             if (conf>conf_pro)
             {
-                //只取前三位conf
-//                if(conf > maxx)
-//                {
-//                    th_max = sec_max;
-//                    th_max_num = sec_max_num;
-//                    sec_max = maxx;
-//                    sec_max_num = maxx_num;
-//                    maxx = conf;
-//                    maxx_num = i;
-                    dt.bb.push_back(i);
-//                }
+                dt.bb.push_back(i);
             }
         }
         else
@@ -1136,23 +1133,6 @@ void detect(const cv::Mat& frame)
 //    t222=(double)getTickCount()-t222;
 //    printf("xiangang----------------------------------->detect222 Run-time: %gms\n", t222*1000/getTickFrequency());
 
-
-//    grid_count = 0;
-//    //加入dt
-//    if(maxx_num != 0 )
-//    {
-//        dt.bb.push_back(maxx_num);
-//    }
-//    if(sec_max_num != 0 )
-//    {
-//        dt.bb.push_back(sec_max_num);
-//    }
-//    if(th_max_num != 0 )
-//    {
-//        dt.bb.push_back(th_max_num);
-//    }
-    
-
     int detections = dt.bb.size();
 
                                                                        //  Initialize detection structure
@@ -1167,21 +1147,7 @@ void detect(const cv::Mat& frame)
 
 //    nn_th = 0.5;
     double t333 = (double)getTickCount();
-//lock 
-//    if(detections > 1)
-//    {
-//        std::lock_guard<std::mutex> lk2(mut_det2);
-//        isdetect2 = true;
-//        g_idx2 = sec_max_num;
-//        data_cond_det2.notify_one();
-//    }
-//    if(detections == 3)
-//    {
-//        std::lock_guard<std::mutex> lk3(mut_det3);
-//        isdetect3 = true;
-//        g_idx3 = th_max_num;
-//        data_cond_det3.notify_one();
-//    }
+
 
     if(detections > 0)
     {
@@ -1206,21 +1172,6 @@ void detect(const cv::Mat& frame)
         }
     }
     
-//    if(detections > 1)
-//    {
-//        std::unique_lock<std::mutex> lk2_2(mut_det2_2);
-//        data_cond_det2_2.wait(lk2_2, []{return isdetect2_2;});
-//        isdetect2_2 = false;
-//        lk2_2.unlock();
-//    }
-//    if(detections == 3)
-//    {
-//        std::unique_lock<std::mutex> lk3_3(mut_det3_3);
-//        data_cond_det3_3.wait(lk3_3, []{return isdetect3_3;});
-//        isdetect3_3 = false;
-//        lk3_3.unlock();
-//    }
-
     if (dbb.size()>0)
     {
         // printf("xiangang->Found %d NN matches\n",(int)dbb.size());
