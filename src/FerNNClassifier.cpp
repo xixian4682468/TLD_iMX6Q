@@ -65,9 +65,9 @@ void FerNNClassifier::prepare(const vector<Size>& scales){
 //      posteriors.push_back(vector<float>(pow(2.0,structSize), 0));
 //      pCounter.push_back(vector<int>(pow(2.0,structSize), 0));
 //      nCounter.push_back(vector<int>(pow(2.0,structSize), 0));
-      posteriors.push_back(vector<float>(8092, 0));
-      pCounter.push_back(vector<int>(8092, 0));
-      nCounter.push_back(vector<int>(8092, 0));
+      posteriors.push_back(vector<float>(8192, 0));
+      pCounter.push_back(vector<int>(8192, 0));
+      nCounter.push_back(vector<int>(8192, 0));
   }
 }
 

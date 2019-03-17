@@ -989,7 +989,7 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 //网格均匀撒点，box共10*10=100个特征点
 void bbPoints(vector<cv::Point2f>& points,const BoundingBox& bb)
 {
-    int max_pts = 7;
+    int max_pts = 10;
     int margin_h = 0;
     int margin_v = 0;
     int stepx = ceil((bb.width-2*margin_h)/max_pts);
@@ -1157,23 +1157,9 @@ void detect(const cv::Mat& frame)
     Scalar mean, stdev;
     float nn_th = classifier.getNNTh();
 
-//    nn_th = 0.5;
+   nn_th = 0.55;
     double t333 = (double)getTickCount();
-//lock 
-//    if(detections > 1)
-//    {
-//        std::lock_guard<std::mutex> lk2(mut_det2);
-//        isdetect2 = true;
-//        g_idx2 = sec_max_num;
-//        data_cond_det2.notify_one();
-//    }
-//    if(detections == 3)
-//    {
-//        std::lock_guard<std::mutex> lk3(mut_det3);
-//        isdetect3 = true;
-//        g_idx3 = th_max_num;
-//        data_cond_det3.notify_one();
-//    }
+
 
     if(detections > 0)
     {
@@ -1198,20 +1184,7 @@ void detect(const cv::Mat& frame)
         }
     }
     
-//    if(detections > 1)
-//    {
-//        std::unique_lock<std::mutex> lk2_2(mut_det2_2);
-//        data_cond_det2_2.wait(lk2_2, []{return isdetect2_2;});
-//        isdetect2_2 = false;
-//        lk2_2.unlock();
-//    }
-//    if(detections == 3)
-//    {
-//        std::unique_lock<std::mutex> lk3_3(mut_det3_3);
-//        data_cond_det3_3.wait(lk3_3, []{return isdetect3_3;});
-//        isdetect3_3 = false;
-//        lk3_3.unlock();
-//    }
+
 
     if (dbb.size()>0)
     {
