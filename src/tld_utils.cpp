@@ -99,10 +99,10 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
     int nMaxX;
     int nMaxY;
     int nHeight = src->rows;
-    int nWidth = src->cols;
+    int nWidth = src->cols * src->channels();
 
     int nTplHeight = pTemplate->rows;
-    int nTplWidth = pTemplate->cols;
+    int nTplWidth = pTemplate->cols * pTemplate->channels();
 
     if (method == 1)
     {
@@ -125,10 +125,12 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
                 dSumS = 0;
                 for (m = 0; m < nTplHeight; m++)
                 {
+                    const uchar* data= src->ptr<uchar>(i + m);
+                    const uchar* data_p= pTemplate->ptr<uchar>(m);
                     for (n = 0; n < nTplWidth; n++)
                     {
-                        int nGraySrc = *src->ptr(i + m, j + n);
-                        int nGrayTpl = *pTemplate->ptr(m, n);
+                        int nGraySrc = data[j + n];
+                        int nGrayTpl = data_p[n];
                         dSumS += (double)nGraySrc*nGraySrc;
                         dSumST += (double)nGraySrc*nGrayTpl;
                     }
@@ -204,3 +206,4 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
     }
     return MaxR;
 }
+

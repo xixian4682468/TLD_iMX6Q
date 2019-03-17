@@ -62,12 +62,12 @@ void FerNNClassifier::prepare(const vector<Size>& scales){
   //Initialize Posteriors
   for (int i = 0; i<nstructs; i++) 
   {
-//      posteriors.push_back(vector<float>(pow(2.0,structSize), 0));
-//      pCounter.push_back(vector<int>(pow(2.0,structSize), 0));
-//      nCounter.push_back(vector<int>(pow(2.0,structSize), 0));
-      posteriors.push_back(vector<float>(8092, 0));
-      pCounter.push_back(vector<int>(8092, 0));
-      nCounter.push_back(vector<int>(8092, 0));
+     // posteriors.push_back(vector<float>(pow(2.0,structSize), 0));
+     // pCounter.push_back(vector<int>(pow(2.0,structSize), 0));
+     // nCounter.push_back(vector<int>(pow(2.0,structSize), 0));
+      posteriors.push_back(vector<float>(8192, 0));
+      pCounter.push_back(vector<int>(8192, 0));
+      nCounter.push_back(vector<int>(8192, 0));
   }
 }
 
@@ -135,7 +135,8 @@ void FerNNClassifier::trainF(const vector<std::pair<vector<int>,int> >& ferns,in
   //}
 }
 
-void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples){
+void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples)
+{
   float conf,dummy;
   vector<int> y(nn_examples.size(),0);
   y[0]=1;
@@ -148,12 +149,18 @@ void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples){
               continue;                                            //        continue;
           }                                                        //      end
           //pEx.insert(pEx.begin()+isin[1],nn_examples[i]);        //      tld.pex = [tld.pex(:,1:isin(2)) x(:,i) tld.pex(:,isin(2)+1:end)]; % add to model
-          pEx.push_back(nn_examples[i]);
+          if(pEx.size() < 3){
+            pEx.push_back(nn_examples[i]);
+          }
       }                                                            //    end
       if(y[i]==0 && conf>0.5)                                      //  if y(i) == 0 && conf1 > 0.5
       {
 //          imwrite("nn_examples.jpg", nn_examples[i]);
-          nEx.push_back(nn_examples[i]);                             //    tld.nex = [tld.nex x(:,i)];
+          if(nEx.size() < 10)
+          {
+            nEx.push_back(nn_examples[i]);
+          }
+            //    tld.nex = [tld.nex x(:,i)];
       }
   }                                                                 //  end
   acum++;

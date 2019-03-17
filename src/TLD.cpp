@@ -219,12 +219,12 @@ void  *pth_det2(void *tt)
         printf("Set pthread_setaffinity_npfailed\n");
 
 
-    DetStruct dtt;    
-    dtt.patt = vector<vector<int> >(1,vector<int>(10,0));        //  Corresponding codes of the Ensemble Classifier
-    dtt.conf1 = vector<float>(1);                                //  Relative Similarity (for final nearest neighbour classifier)
-    dtt.conf2 =vector<float>(1);                                 //  Conservative Similarity (for integration with tracker)
-    dtt.isin = vector<vector<int> >(1,vector<int>(3,-1));        //  Detected (isin=1) or rejected (isin=0) by nearest neighbour classifier
-    dtt.patch = vector<Mat>(1,Mat(patch_size,patch_size,/*CV_32F*/CV_8U));//  Corresponding patches
+    // DetStruct dtt;    
+    // dtt.patt = vector<vector<int> >(1,vector<int>(10,0));        //  Corresponding codes of the Ensemble Classifier
+    // dtt.conf1 = vector<float>(1);                                //  Relative Similarity (for final nearest neighbour classifier)
+    // dtt.conf2 =vector<float>(1);                                 //  Conservative Similarity (for integration with tracker)
+    // dtt.isin = vector<vector<int> >(1,vector<int>(3,-1));        //  Detected (isin=1) or rejected (isin=0) by nearest neighbour classifier
+    // dtt.patch = vector<Mat>(1,Mat(patch_size,patch_size,/*CV_32F*/CV_8U));//  Corresponding patches
 
         while(Pth_destory_Flag)
         {
@@ -232,35 +232,37 @@ void  *pth_det2(void *tt)
             std::unique_lock<std::mutex> lk2(mut_det2);
             data_cond_det2.wait(lk2, []{return isdetect2;});
 // main
-            int idx;
-            Scalar mean, stdev;
-            float nn_th = classifier.getNNTh();
-//            nn_th = 0.5;
-            Mat patch;
+            // int idx;
+            // Scalar mean, stdev;
+            // float nn_th = classifier.getNNTh();
+           // nn_th = 0.5;
+            // Mat patch;
 
-            idx=g_idx2;                                                       //  Get the detected bounding box index
+            // idx=g_idx2;                                                       //  Get the detected bounding box index
 
-            patch = dec_mat(grid[idx]);
+            // patch = dec_mat(grid[idx]);
 
-            getPattern(patch,dtt.patch[0],mean,stdev);                //  Get pattern within bounding box
+            // getPattern(patch,dtt.patch[0],mean,stdev);                //  Get pattern within bounding box
 
-            classifier.NNConf(dtt.patch[0],dtt.isin[0],dtt.conf1[0],dtt.conf2[0]);  //  Evaluate nearest neighbour classifier
-            dtt.patt[0]=tmp.patt[idx];
+            // classifier.NNConf(dtt.patch[0],dtt.isin[0],dtt.conf1[0],dtt.conf2[0]);  //  Evaluate nearest neighbour classifier
+            // dtt.patt[0]=tmp.patt[idx];
      
-            if (dtt.conf1[0]>nn_th)
-            {                                               //  idx = dt.conf1 > tld.model.thr_nn; % get all indexes that made it through the nearest neighbour
-                BoundingBox temp;
-                temp = grid[idx];
-                dbb.push_back(temp);                                            //  BB    = dt.bb(:,idx); % bounding boxes
-                dconf.push_back(dtt.conf2[0]);                                     //  Conf  = dt.conf2(:,idx); % conservative confidences
-            }
+            // if (dtt.conf1[0]>nn_th)
+            // {                                               //  idx = dt.conf1 > tld.model.thr_nn; % get all indexes that made it through the nearest neighbour
+                // BoundingBox temp;
+                // temp = grid[idx];
+                // dbb.push_back(temp);                                            //  BB    = dt.bb(:,idx); % bounding boxes
+                // dconf.push_back(dtt.conf2[0]);                                     //  Conf  = dt.conf2(:,idx); % conservative confidences
+            // }
               
-            dtt.bb.clear();  
+            // dtt.bb.clear();  
 
-            std::lock_guard<std::mutex> lk2_2(mut_det2_2);
-            isdetect2_2 = true;
-            data_cond_det2_2.notify_one();
-
+            // std::lock_guard<std::mutex> lk2_2(mut_det2_2);
+            // isdetect2_2 = true;
+            // data_cond_det2_2.notify_one();
+            
+            learn(/*img2*/dec_mat);
+            
             isdetect2 = false;
             lk2.unlock();
         }
@@ -904,8 +906,14 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     // 	fprintf(bb_file,"NaN,NaN,NaN,NaN,NaN\n");
 
     ///learn 学习模块
-//     if (lastvalid && tl)
-//        learn(/*img2*/dec_mat);
+    if (lastvalid && tl)
+    {
+       // learn(/*img2*/dec_mat);
+              std::lock_guard<std::mutex> lk2(mut_det2);
+       isdetect2 = true;
+//        g_idx2 = sec_max_num;
+       data_cond_det2.notify_one();
+    }
 
     ptt=(double)getTickCount()-ptt;
     printf("xiangang----------------------------------->processFrame Run-time: %gms\n", ptt*1000/getTickFrequency());
@@ -945,7 +953,7 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 		//跟踪失败检测：如果FB error的中值大于10个像素（经验值），或者预测到的当前box的位置移出图像，则
 		//认为跟踪错误，此时不返回bounding box；Rect::br()返回的是右下角的坐标
 		//getFB()返回的是FB error的中值
-		if (tracker.getFB()>10 || tbb.x>img2.cols ||  tbb.y>img2.rows || tbb.br().x < 1 || tbb.br().y <1)
+		if (tracker.getFB() > 10 || tbb.x>img2.cols ||  tbb.y>img2.rows || tbb.br().x < 1 || tbb.br().y <1)
 		{
 			tvalid =false; //too unstable prediction or bounding box out of image
 			tracked = false;
@@ -955,28 +963,28 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 
 		//Estimate Confidence and Validity
 		//评估跟踪确信度和有效性
-//		Mat pattern;
-//		Scalar mean, stdev;
-//		BoundingBox bb;
-//		bb.x = max(tbb.x,0);
-//		bb.y = max(tbb.y,0);
-//		bb.width = min(min(img2.cols-tbb.x,tbb.width),min(tbb.width,tbb.br().x));
-//		bb.height = min(min(img2.rows-tbb.y,tbb.height),min(tbb.height,tbb.br().y));
+		Mat pattern;
+		Scalar mean, stdev;
+		BoundingBox bb;
+		bb.x = max(tbb.x,0);
+		bb.y = max(tbb.y,0);
+		bb.width = min(min(img2.cols-tbb.x,tbb.width),min(tbb.width,tbb.br().x));
+		bb.height = min(min(img2.rows-tbb.y,tbb.height),min(tbb.height,tbb.br().y));
 		
-//		//归一化img2(bb)对应的patch的size（放缩至patch_size = 15*15），存入pattern
-//		getPattern(img2(bb),pattern,mean,stdev);
-//		vector<int> isin;
-//		float dummy;
+		//归一化img2(bb)对应的patch的size（放缩至patch_size = 15*15），存入pattern
+		getPattern(img2(bb),pattern,mean,stdev);
+		vector<int> isin;
+		float dummy;
 		
-//		//计算图像片pattern到在线模型M的保守相似度
-//		classifier.NNConf(pattern,isin,dummy,tconf); //Conservative Similarity
-//		tvalid = lastvalid;
+		//计算图像片pattern到在线模型M的保守相似度
+		classifier.NNConf(pattern,isin,dummy,tconf); //Conservative Similarity
+		tvalid = lastvalid;
 		
-//		//保守相似度大于阈值，则评估跟踪有效
-//		if (tconf>classifier.thr_nn_valid)
-//		{
-//			tvalid =true;
-//		}
+		//保守相似度大于阈值，则评估跟踪有效
+		if (tconf>classifier.thr_nn_valid)
+		{
+			tvalid =true;
+		}
 
 	}
 	else
@@ -989,7 +997,7 @@ void track(const Mat& img1, const Mat& img2,vector<Point2f>& points1,vector<Poin
 //网格均匀撒点，box共10*10=100个特征点
 void bbPoints(vector<cv::Point2f>& points,const BoundingBox& bb)
 {
-    int max_pts = 7;
+    int max_pts = 10;
     int margin_h = 0;
     int margin_v = 0;
     int stepx = ceil((bb.width-2*margin_h)/max_pts);
@@ -1313,7 +1321,7 @@ void buildGrid(const cv::Mat& img, const cv::Rect& box)
     BoundingBox bbox;
     Size scale;
     int sc=0;
-    for (int s=8;s<13;s++)
+    for (int s=10;s<11;s++)
     {
         width = round(box.width*SCALES[s]);
         height = round(box.height*SCALES[s]);
