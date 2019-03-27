@@ -10,6 +10,8 @@
 using namespace cv;
 using namespace std;
 
+extern unsigned short CCD_IR_Target_x, CCD_IR_Target_y; 
+
 cv::Mat iisum;
 cv::Mat iisqsum;
 ///Parameters
@@ -112,6 +114,9 @@ static void *pth_test(void *);
 int ppp();
 std::mutex mut;
 std::condition_variable data_cond;
+bool isdetect_det;
+std::mutex mut_det;
+std::condition_variable data_cond_det;
 Mat dec_mat;
 Mat img_det;
 
@@ -192,7 +197,11 @@ void  *pth_test(void *tt)
         t=(double)getTickCount()-t;
         printf("xiangang----------------------------------->detect Run-time: %gms\n", t*1000/getTickFrequency());
 
-//        isdetect = false;
+		std::lock_guard<std::mutex> lk_det(mut_det);
+		isdetect_det = true;
+		data_cond_det.notify_one();
+		
+       isdetect = false;
         lk.unlock();
     }
 	printf("**************************************************destory pth_test\n");
@@ -535,14 +544,14 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   //相当于对RectBox进行筛选。并通过BBhull函数得到这些RectBox的最大边界
   getOverlappingBoxes(box,num_closest_init);
   //printf("Found %d good boxes, %d bad boxes\n",(int)good_boxes.size(),(int)bad_boxes.size());
-  //printf("Best Box: %d %d %d %d\n",best_box.x,best_box.y,best_box.width,best_box.height);
+  printf("Best Box: %d %d %d %d\n",best_box.x,best_box.y,best_box.width,best_box.height);
  // printf("Bounding box hull: %d %d %d %d\n",bbhull.x,bbhull.y,bbhull.width,bbhull.height);
   //Correct Bounding Box
   lastbox=best_box;
   lastconf=1;
   lastvalid=true;
   //Print
-  fprintf(bb_file,"%d,%d,%d,%d,%f\n", lastbox.x,lastbox.y,lastbox.br().x,lastbox.br().y,lastconf);
+  printf("%d,%d,%d,%d,%f\n", lastbox.x,lastbox.y,lastbox.br().x,lastbox.br().y,lastconf);
   
   //Prepare Classifier
   //Prepare Classifier 准备分类器
@@ -783,8 +792,8 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
 	Mat re_img1;
 //    resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
-    dec_mat = img2(Rect(296, 224, 128, 128));
-    if(track_count == 0)
+    dec_mat = img2(Rect(CCD_IR_Target_x - 64, CCD_IR_Target_y - 64, 128, 128));
+    // if(track_count == 0)
     {
         std::lock_guard<std::mutex> lk(mut);
         isdetect = true;
@@ -793,7 +802,7 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     track_count++;
 
 //    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
-    re_img1 = img1(Rect(296, 224, 128, 128));
+    re_img1 = img1(Rect(CCD_IR_Target_x - 64, CCD_IR_Target_y - 64, 128, 128));
 
     ///Track  跟踪模块
     if(lastboxfound && tl)
@@ -813,6 +822,12 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     ///Detect   检测模块
     // detect(dec_mat);
 
+	
+	std::unique_lock<std::mutex> lk_det(mut_det);
+    data_cond_det.wait(lk_det, []{return isdetect_det;});
+    isdetect_det = false;
+    lk_det.unlock();
+	
     ///Integration 综合模块
     //TLD只跟踪单目标，所以综合模块综合跟踪器跟踪到的单个目标和检测器检测到的多个目标，然后只输出保守相似度最大的一个目标
     if(tracked)
@@ -1039,10 +1054,10 @@ void bbPredict(const vector<cv::Point2f>& points1,const vector<cv::Point2f>& poi
     float s1 = 0.5*(s-1)*bb1.width;
     float s2 = 0.5*(s-1)*bb1.height;
     printf("s= %f s1= %f s2= %f \n",s,s1,s2);
-    bb2.x = round( bb1.x + dx -s1);
-    bb2.y = round( bb1.y + dy -s2);
-    bb2.width = round(bb1.width*s);
-    bb2.height = round(bb1.height*s);
+    bb2.x = cvRound( bb1.x + dx -s1);
+    bb2.y = cvRound( bb1.y + dy -s2);
+    bb2.width = cvRound(bb1.width*s);
+    bb2.height = cvRound(bb1.height*s);
     printf("predicted bb: %d %d %d %d\n",bb2.x,bb2.y,bb2.br().x,bb2.br().y);
 }
 
@@ -1157,7 +1172,7 @@ void detect(const cv::Mat& frame)
     Scalar mean, stdev;
     float nn_th = classifier.getNNTh();
 
-   //nn_th = 0.55;
+   // nn_th = 0.55;
     double t333 = (double)getTickCount();
 
 
@@ -1288,17 +1303,17 @@ void buildGrid(const cv::Mat& img, const cv::Rect& box)
     int sc=0;
     for (int s=8;s<13;s++)
     {
-        width = round(box.width*SCALES[s]);
-        height = round(box.height*SCALES[s]);
+        width = cvRound(box.width*SCALES[s]);
+        height = cvRound(box.height*SCALES[s]);
         min_bb_side = min(height,width);
         if (min_bb_side < min_win || width > img.cols || height > img.rows)
             continue;
         scale.width = width;
         scale.height = height;
         scales.push_back(scale);
-        for (int y=1;y<img.rows-height;y+=round(SHIFT*min_bb_side))
+        for (int y=1;y<img.rows-height;y+=cvRound(SHIFT*min_bb_side))
         {
-            for (int x=1;x<img.cols-width;x+=round(SHIFT*min_bb_side))
+            for (int x=1;x<img.cols-width;x+=cvRound(SHIFT*min_bb_side))
             {
                 bbox.x = x;
                 bbox.y = y;

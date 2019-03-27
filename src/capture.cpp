@@ -309,7 +309,8 @@ v4l_get_capture_data(struct v4l2_buffer *buf)
 			DisPlay_Target_Bomen(CCD_IR_Target_x, CCD_IR_Target_y, Picture_576p, VPU_Camera_Resolution);
 		}
 
-        LCD_DrawRectangle(292, 224, 424, 352, Picture_576p, 576, 0);
+        //LCD_DrawRectangle(292, 224, 424, 352, Picture_576p, 576, 0);
+		LCD_DrawRectangle(CCD_IR_Target_x - 64, CCD_IR_Target_y - 64, CCD_IR_Target_x + 64,  CCD_IR_Target_y + 64, Picture_576p, 576, 0);
 
 		memcpy(cap_buffers[buf->index].start, Picture_576p, 720*576*3/2);
 	}	
