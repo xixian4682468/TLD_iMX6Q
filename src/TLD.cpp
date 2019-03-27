@@ -783,7 +783,7 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
 	Mat re_img1;
 //    resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
-    dec_mat = img2(Rect(260, 188, 200, 200));
+    dec_mat = img2(Rect(296, 224, 128, 128));
     if(track_count == 0)
     {
         std::lock_guard<std::mutex> lk(mut);
@@ -793,7 +793,7 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     track_count++;
 
 //    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
-    re_img1 = img1(Rect(260, 188, 200, 200));
+    re_img1 = img1(Rect(296, 224, 128, 128));
 
     ///Track  跟踪模块
     if(lastboxfound && tl)
@@ -1157,7 +1157,7 @@ void detect(const cv::Mat& frame)
     Scalar mean, stdev;
     float nn_th = classifier.getNNTh();
 
-   nn_th = 0.55;
+   //nn_th = 0.55;
     double t333 = (double)getTickCount();
 
 

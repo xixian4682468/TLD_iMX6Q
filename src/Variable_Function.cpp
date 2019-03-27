@@ -546,11 +546,11 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		//box_b.width = box_b.width / 4;
 		//box_b.height = box_b.height / 4;
 		
-        box_b.x = (Rec_Target_x-32) - 260/*/ 4*/;
-        box_b.y = (Rec_Target_y-32) - 188/*/ 4*/;
-        box_b.width  = 64 /*/ 4*/;
-        box_b.height = 64 /*/ 4*/;
-        last_gray_resize = last_gray(Rect(260, 188, 200, 200));
+        box_b.x = (Rec_Target_x-32) - 296/*/ 4*/;
+        box_b.y = (Rec_Target_y-32) - 224/*/ 4*/;
+        box_b.width  = 64 / 2 /*/ 4*/;
+        box_b.height = 64 / 2 /*/ 4*/;
+        last_gray_resize = last_gray(Rect(296, 224, 128, 128));
 		init(last_gray_resize, box_b, bb_file);
 
 
@@ -582,14 +582,14 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		{
 			// drawPoints(current_gray, pts1);
 			// drawPoints(current_gray, pts2, Scalar());
-            draw_pbox.x = pbox.x + 260/**4*/;
-            draw_pbox.y = pbox.y + 188/**4*/;
+            draw_pbox.x = pbox.x + 296/**4*/;
+            draw_pbox.y = pbox.y + 224/**4*/;
             draw_pbox.width = pbox.width/**4*/;
             draw_pbox.height = pbox.height/**4*/;
            // drawBox(current_gray, draw_pbox);
            mubiaodiushi = 0;
-		   CCD_IR_Target_x = draw_pbox.x + draw_pbox.width/2;
-		   CCD_IR_Target_y = draw_pbox.y + draw_pbox.height/2;
+		   CCD_IR_Target_x = draw_pbox.x + draw_pbox.width;
+		   CCD_IR_Target_y = draw_pbox.y + draw_pbox.height;
 		   //printf(" *********************************************mubiaodiushi = %d  ,CCD_IR_Target_x = %d  ,CCD_IR_Target_y = %d***** \n",mubiaodiushi,CCD_IR_Target_x,CCD_IR_Target_y);
 		   
 		}
