@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-extern unsigned short CCD_IR_Target_x, CCD_IR_Target_y; 
+extern unsigned short CCD_IR_Detect_x, CCD_IR_Detect_y;
 
 cv::Mat iisum;
 cv::Mat iisqsum;
@@ -792,7 +792,7 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
 	Mat re_img1;
 //    resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
-    dec_mat = img2(Rect(CCD_IR_Target_x - 64, CCD_IR_Target_y - 64, 128, 128));
+    dec_mat = img2(Rect(CCD_IR_Detect_x - 64, CCD_IR_Detect_y - 64, 128, 128));
     // if(track_count == 0)
     {
         std::lock_guard<std::mutex> lk(mut);
@@ -802,7 +802,7 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     track_count++;
 
 //    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
-    re_img1 = img1(Rect(CCD_IR_Target_x - 64, CCD_IR_Target_y - 64, 128, 128));
+    re_img1 = img1(Rect(CCD_IR_Detect_x - 64, CCD_IR_Detect_y - 64, 128, 128));
 
     ///Track  跟踪模块
     if(lastboxfound && tl)
@@ -1054,10 +1054,10 @@ void bbPredict(const vector<cv::Point2f>& points1,const vector<cv::Point2f>& poi
     float s1 = 0.5*(s-1)*bb1.width;
     float s2 = 0.5*(s-1)*bb1.height;
     printf("s= %f s1= %f s2= %f \n",s,s1,s2);
-    bb2.x = cvRound( bb1.x + dx -s1);
-    bb2.y = cvRound( bb1.y + dy -s2);
-    bb2.width = cvRound(bb1.width*s);
-    bb2.height = cvRound(bb1.height*s);
+    bb2.x = round( bb1.x + dx -s1);
+    bb2.y = round( bb1.y + dy -s2);
+    bb2.width = round(bb1.width*s);
+    bb2.height = round(bb1.height*s);
     printf("predicted bb: %d %d %d %d\n",bb2.x,bb2.y,bb2.br().x,bb2.br().y);
 }
 
@@ -1303,17 +1303,17 @@ void buildGrid(const cv::Mat& img, const cv::Rect& box)
     int sc=0;
     for (int s=8;s<13;s++)
     {
-        width = cvRound(box.width*SCALES[s]);
-        height = cvRound(box.height*SCALES[s]);
+        width = round(box.width*SCALES[s]);
+        height = round(box.height*SCALES[s]);
         min_bb_side = min(height,width);
         if (min_bb_side < min_win || width > img.cols || height > img.rows)
             continue;
         scale.width = width;
         scale.height = height;
         scales.push_back(scale);
-        for (int y=1;y<img.rows-height;y+=cvRound(SHIFT*min_bb_side))
+        for (int y=1;y<img.rows-height;y+=round(SHIFT*min_bb_side))
         {
-            for (int x=1;x<img.cols-width;x+=cvRound(SHIFT*min_bb_side))
+            for (int x=1;x<img.cols-width;x+=round(SHIFT*min_bb_side))
             {
                 bbox.x = x;
                 bbox.y = y;
