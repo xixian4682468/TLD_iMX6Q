@@ -189,7 +189,7 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
       csconf=1;
       return;
   }
-  Mat ncc(1,1,/*CV_32F*/CV_8U);
+  Mat ncc(1,1,CV_32F/*CV_8U*/);
   float nccP,csmaxP,maxP=0;
   bool anyP=false;
   int maxPidx,validatedPart = ceil(pEx.size()*valid);
@@ -202,8 +202,8 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
   {
 //      matchTemplate(pEx[i],example,ncc,CV_TM_CCORR_NORMED);      // measure NCC to positive examples
 //      nccP=(((float*)ncc.data)[0]+1)*0.5;
-      double ma = myTemplateMatch(&example, &pEx[i], 1);
-      nccP = ((float)ma + 1) * 0.5;
+      float ma = myTemplateMatch(&example, &pEx[i], 1);
+      nccP = (ma + 1) * 0.5;
 //      printf("matchTemplate:%f ma:%f\n",((float*)ncc.data)[0], ma);
       if (nccP>ncc_thesame)
         anyP=true;
@@ -225,8 +225,8 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
   {
 //      matchTemplate(nEx[i],example,ncc,CV_TM_CCORR_NORMED);     //measure NCC to negative examples
 //      nccN=(((float*)ncc.data)[0]+1)*0.5;
-      double ma = myTemplateMatch(&example, &nEx[i], 1);
-      nccN = ((float)ma + 1) * 0.5;
+      float ma = myTemplateMatch(&example, &nEx[i], 1);
+      nccN = (ma + 1) * 0.5;
       if (nccN>ncc_thesame)
         anyN=true;
       if(nccN > maxN)

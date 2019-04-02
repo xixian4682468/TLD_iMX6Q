@@ -528,7 +528,7 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   bad_boxes.reserve(grid.size());
   
   //TLD中定义：cv::Mat pEx;  //positive NN example 大小为15*15图像片
-  pEx.create(patch_size,patch_size,CV_8U);
+  pEx.create(patch_size,patch_size,CV_64F);
   //Init Generator
   generator = PatchGenerator(0,0,noise_init,true,1-scale_init,1+scale_init,-angle_init*CV_PI/180,angle_init*CV_PI/180,-angle_init*CV_PI/180,angle_init*CV_PI/180);
   
@@ -714,7 +714,7 @@ pattern = Mat::zeros(patch_size, patch_size, CV_8U);
     }
 
     meanStdDev(pattern,mean,stdev);
-//    pattern.convertTo(pattern,CV_32F);
+    pattern.convertTo(pattern,CV_32F);
     pattern = pattern-mean.val[0];
 }
 
@@ -1063,16 +1063,10 @@ void bbPredict(const vector<cv::Point2f>& points1,const vector<cv::Point2f>& poi
 
 void detect(const cv::Mat& frame)
 {
-//    double t111 = (double)getTickCount();
-
-    //cleaning
     dbb.clear();
     dconf.clear();
     dt.bb.clear();
 
-//    double t = (double)getTickCount();
-
-//    Mat img(frame.rows,frame.cols,CV_8U);
     img_g.create(frame.rows,frame.cols,CV_8U);
     integral(frame,iisum,iisqsum);
     GaussianBlur(frame, img_g, Size(9,9),1.5);
@@ -1083,16 +1077,9 @@ void detect(const cv::Mat& frame)
     float conf;
     int a=0;
     Mat patch;
-
-    // printf("xiangang->grid.size:%d\n", grid.size());  
-
     int grid_len = grid.size();
     int half = grid_len / 2;
 
-//    t111=(double)getTickCount()-t111;
-//    printf("xiangang----------------------------------->detect111 Run-time: %gms\n", t111*1000/getTickFrequency());
-
-//    double t222 = (double)getTickCount();
 
     isdetect4 = true;
     data_cond_det4.notify_one();
@@ -1104,10 +1091,7 @@ void detect(const cv::Mat& frame)
         {
             a++;
             patch = img_g(grid[i]);
-//            double t111 = (double)getTickCount();
             classifier.getFeatures(patch,grid[i].sidx,ferns);
-//                t111=(double)getTickCount()-t111;
-//                printf("xiangang----------------------------------->detect111 getFeatures-time: %gms\n", t111*1000/getTickFrequency());
             conf = classifier.measure_forest(ferns);
 
             tmp.conf[i]=conf;
@@ -1122,16 +1106,11 @@ void detect(const cv::Mat& frame)
             tmp.conf[i]=0.0;
         }
     }
-//    printf("half:%d\n",half);
-//    printf("var:%f\n",var);
-//    printf("a:%d\n",a);
+
     std::unique_lock<std::mutex> lk4_4(mut_det4_4);
     data_cond_det4_4.wait(lk4_4, []{return isdetect4_4;});
     isdetect4_4 = false;
     lk4_4.unlock();
-
-//    t222=(double)getTickCount()-t222;
-//    printf("xiangang----------------------------------->detect222 Run-time: %gms\n", t222*1000/getTickFrequency());
 
     int detections = dt.bb.size();
 
@@ -1140,14 +1119,10 @@ void detect(const cv::Mat& frame)
     dt.conf1 = vector<float>(detections);                                //  Relative Similarity (for final nearest neighbour classifier)
     dt.conf2 =vector<float>(detections);                                 //  Conservative Similarity (for integration with tracker)
     dt.isin = vector<vector<int> >(detections,vector<int>(3,-1));        //  Detected (isin=1) or rejected (isin=0) by nearest neighbour classifier
-    dt.patch = vector<Mat>(detections,Mat(patch_size,patch_size,/*CV_32F*/CV_8U));//  Corresponding patches
+    dt.patch = vector<Mat>(detections,Mat(patch_size,patch_size,CV_32F/*CV_8U*/));//  Corresponding patches
     int idx;
     Scalar mean, stdev;
     float nn_th = classifier.getNNTh();
-
-//    nn_th = 0.5;
-    double t333 = (double)getTickCount();
-
 
     if(detections > 0)
     {
@@ -1164,8 +1139,6 @@ void detect(const cv::Mat& frame)
 
             if (dt.conf1[i]>nn_th)
             {                                               //  idx = dt.conf1 > tld.model.thr_nn; % get all indexes that made it through the nearest neighbour
-//                BoundingBox temp;
-//                temp = grid[idx];
                 dbb.push_back(grid[idx]);                                           //  BB    = dt.bb(:,idx); % bounding boxes
                 dconf.push_back(dt.conf2[i]);                                     //  Conf  = dt.conf2(:,idx); % conservative confidences
             }
@@ -1182,9 +1155,6 @@ void detect(const cv::Mat& frame)
         // printf("No NN matches found.\n");
         detected=false;
     }
-
-//    t333=(double)getTickCount()-t333;
-//    printf("xiangang----------------------------------->detect222 Run-time: %gms\n", t333*1000/getTickFrequency());
 
 }
 

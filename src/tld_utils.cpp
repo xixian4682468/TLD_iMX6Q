@@ -86,23 +86,24 @@ void myResize(const unsigned char *dataSrc, unsigned char *dataDst, int src_widt
   }
 }
 
-double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method : 1 CV_TM_CCORR_NORMED  2 CV_TM_CCOEFF_NORMED*/
+ /*method : 1 CV_TM_CCORR_NORMED  2 CV_TM_CCOEFF_NORMED*/
+float myTemplateMatch(const Mat *pTemplate,const Mat *src,int method )
 {
     int i, j, m, n;
-    double dSumT,dSumTT;
-    double dSumS,dSumSS;
-    double dSumST;
-    double R;
+    float dSumT,dSumTT;
+    float dSumS,dSumSS;
+    float dSumST;
+    float R;
 
-    double MaxR;
+    float MaxR;
 
     int nMaxX;
     int nMaxY;
     int nHeight = src->rows;
-    int nWidth = src->cols * src->channels();
+    int nWidth = src->cols;
 
     int nTplHeight = pTemplate->rows;
-    int nTplWidth = pTemplate->cols * pTemplate->channels();
+    int nTplWidth = pTemplate->cols;
 
     if (method == 1)
     {
@@ -111,8 +112,8 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
         {
             for (n = 0; n < nTplWidth; n++)
             {
-                int nGray =*pTemplate->ptr(m, n);
-                dSumT += (double)nGray*nGray;
+                float nGray =*pTemplate->ptr<float>(m, n);
+                dSumT += nGray*nGray;
             }
         }
 
@@ -125,24 +126,16 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
                 dSumS = 0;
                 for (m = 0; m < nTplHeight; m++)
                 {
-                    const uchar* data= src->ptr<uchar>(i + m);
-                    const uchar* data_p= pTemplate->ptr<uchar>(m);
                     for (n = 0; n < nTplWidth; n++)
                     {
-                        int nGraySrc = data[j + n];
-                        int nGrayTpl = data_p[n];
-                        dSumS += (double)nGraySrc*nGraySrc;
-                        dSumST += (double)nGraySrc*nGrayTpl;
+                        float nGraySrc = *src->ptr<float>(i + m, j + n);
+                        float nGrayTpl = *pTemplate->ptr<float>(m, n);
+                        dSumS += nGraySrc*nGraySrc;
+                        dSumST += nGraySrc*nGrayTpl;
                     }
                 }
                 R = dSumST / (sqrt(dSumS)*sqrt(dSumT));
-                if (R > MaxR)
-                {
-                    MaxR = R;
-                    nMaxX = j;
-                    nMaxY = i;
-
-                }
+                MaxR = R;
             }
         }
     }
@@ -153,12 +146,13 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
         {
             for (n = 0; n < nTplWidth; n++)
             {
-                int nGray =*pTemplate->ptr(m, n);
-                dSumT  += (double)nGray;
+                float nGray =*pTemplate->ptr(m, n);
+//                printf("nGray:%f\n", nGray);
+                dSumT  += (float)nGray;
             }
         }
         dSumT = dSumT/(nTplHeight*nTplWidth);
-
+//        printf("dSumT:%f\n", dSumT);
         MaxR = 0;
         for (i = 0; i < nHeight - nTplHeight + 1; i++)
         {
@@ -173,8 +167,8 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
                     for (n = 0; n < nTplWidth; n++)
                     {
 
-                        int nGraySrc = *src->ptr(i + m, j + n);
-                        dSumS += (double)nGraySrc;
+                        float nGraySrc = *src->ptr(i + m, j + n);
+                        dSumS += nGraySrc;
                     }
                 }
                 dSumS = dSumS/(nTplHeight*nTplHeight);
@@ -183,26 +177,23 @@ double myTemplateMatch(const Mat *pTemplate,const Mat *src,int method ) /*method
                     for (n = 0; n < nTplWidth; n++)
                     {
 
-                        int nGraySrc = *src->ptr(i + m, j + n);
+                        float nGraySrc = *src->ptr(i + m, j + n);
 
-                        int nGrayTpl = *pTemplate->ptr(m, n);
+                        float nGrayTpl = *pTemplate->ptr(m, n);
 
-                        double TT = ((double)nGrayTpl-dSumT) ;
-                        double SS = ((double)nGraySrc-dSumS) ;
+                        float TT = (nGrayTpl-dSumT) ;
+                        float SS = (nGraySrc-dSumS) ;
                         dSumTT  += TT*TT;
                         dSumSS  += SS*SS;
                         dSumST += (TT*SS);
                     }
                 }
-                R= dSumST/(sqrt(dSumTT)*sqrt(dSumSS));
-                if (R > MaxR)
-                {
-                    MaxR = R;
-                    nMaxX = j;
-                    nMaxY = i;
-                }
+//                printf("dSumT:%f  %f   %f\n", dSumTT, dSumSS, dSumST);
+                R= dSumST/(sqrt(dSumTT*dSumSS));
+                MaxR = R;
             }
         }
+
     }
     return MaxR;
 }
