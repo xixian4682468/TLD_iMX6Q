@@ -409,7 +409,8 @@ unsigned char* gSubImageData_QS;
 unsigned char gSubImageData_malloc[1920*1080*3/2] = {0};
 
 
-unsigned short CCD_IR_Target_x = 0, CCD_IR_Target_y = 0; 
+unsigned short CCD_IR_Target_x = 360, CCD_IR_Target_y = 288;
+unsigned short CCD_IR_Detect_x = 360, CCD_IR_Detect_y = 288;
 extern unsigned short Rec_Target_x,Rec_Target_y;
 
 //QS跟踪器  _目标框*******************************************
@@ -537,20 +538,36 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		memcpy(last_gray.data, gSubImageData_malloc, 720*576); 
 
 		Mat last_gray_resize;
-// imwrite("last_gray.bmp",last_gray);
-//		resize(last_gray, last_gray_resize, Size(last_gray.cols/4, last_gray.rows/4));
-		// imwrite("last_gray_resize.bmp",last_gray_resize);
 
-		//box_b.x = box_b.x / 4;
-		//box_b.y = box_b.y / 4;
-		//box_b.width = box_b.width / 4;
-		//box_b.height = box_b.height / 4;
 		
-        box_b.x = (Rec_Target_x-32) - 260/*/ 4*/;
-        box_b.y = (Rec_Target_y-32) - 188/*/ 4*/;
-        box_b.width  = 64 /*/ 4*/;
-        box_b.height = 64 /*/ 4*/;
-        last_gray_resize = last_gray(Rect(260, 188, 200, 200));
+        //(Rec_Target_x,Rec_Target_x)为中点点
+        box_b.x = 32;
+        box_b.y = 32;
+        box_b.width  = 32 /*/ 4*/;
+        box_b.height = 32 /*/ 4*/;
+        //画框，中心点， 框大小为128x128
+        CCD_IR_Target_x = Rec_Target_x;
+        CCD_IR_Target_y = Rec_Target_y;
+        CCD_IR_Detect_x = Rec_Target_x;
+        CCD_IR_Detect_y = Rec_Target_y;
+        if(CCD_IR_Detect_x < 64)
+        {
+            CCD_IR_Detect_x = 65;
+        }
+        if(CCD_IR_Detect_y < 64)
+        {
+            CCD_IR_Detect_y = 65;
+        }
+        if(CCD_IR_Detect_x + 64 > 720)
+        {
+            CCD_IR_Detect_x = 720 - 65;
+        }
+        if(CCD_IR_Detect_y + 64 > 576)
+        {
+            CCD_IR_Detect_y = 576 - 65;
+        }
+
+        last_gray_resize = last_gray(Rect(Rec_Target_x - 64, Rec_Target_y - 64, 128, 128));
 		init(last_gray_resize, box_b, bb_file);
 
 
@@ -580,18 +597,40 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		mubiaodiushi = 1;
 		if(status)
 		{
-			// drawPoints(current_gray, pts1);
-			// drawPoints(current_gray, pts2, Scalar());
-            draw_pbox.x = pbox.x + 260/**4*/;
-            draw_pbox.y = pbox.y + 188/**4*/;
+            // 新框x = 检测框x + 相对搜索框位置x
+            // 相对搜索框位置x = CCD_IR_Target_x中心x - 64
+            draw_pbox.x = pbox.x + CCD_IR_Detect_x - 64/**4*/;
+            draw_pbox.y = pbox.y + CCD_IR_Detect_y - 64/**4*/;
             draw_pbox.width = pbox.width/**4*/;
             draw_pbox.height = pbox.height/**4*/;
-           // drawBox(current_gray, draw_pbox);
-           mubiaodiushi = 0;
-		   CCD_IR_Target_x = draw_pbox.x + draw_pbox.width/2;
-		   CCD_IR_Target_y = draw_pbox.y + draw_pbox.height/2;
-		   //printf(" *********************************************mubiaodiushi = %d  ,CCD_IR_Target_x = %d  ,CCD_IR_Target_y = %d***** \n",mubiaodiushi,CCD_IR_Target_x,CCD_IR_Target_y);
-		   
+            mubiaodiushi = 0;
+            CCD_IR_Target_x = draw_pbox.x + draw_pbox.width;
+            CCD_IR_Target_y = draw_pbox.y + draw_pbox.height;
+
+            if(abs(CCD_IR_Target_x - CCD_IR_Detect_x) > 20 ||
+                    abs(CCD_IR_Target_y - CCD_IR_Detect_y) > 20)
+            {
+               //画框，中心点， 框大小为128x128
+                CCD_IR_Detect_x = CCD_IR_Target_x;
+                CCD_IR_Detect_y = CCD_IR_Target_y;
+                if(CCD_IR_Detect_x < 64)
+                {
+                    CCD_IR_Detect_x = 65;
+                }
+                if(CCD_IR_Detect_y < 64)
+                {
+                    CCD_IR_Detect_y = 65;
+                }
+
+                if(CCD_IR_Detect_x + 64 > 720)
+                {
+                    CCD_IR_Detect_x = 720 - 65;
+                }
+                if(CCD_IR_Detect_y + 64 > 576)
+                {
+                    CCD_IR_Detect_y = 576 - 65;
+                }
+            }
 		}
 		//memcpy(capture_buffers[capture_buf.index].start, current_gray.data, WIDTH*HEIGHT); 
 		swap(last_gray, current_gray);

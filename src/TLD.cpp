@@ -11,7 +11,7 @@ using namespace cv;
 using namespace std;
 
 int dddt;
-
+extern unsigned short CCD_IR_Detect_x, CCD_IR_Detect_y;
 cv::Mat iisum;
 cv::Mat iisqsum;
 ///Parameters
@@ -198,9 +198,7 @@ void  *pth_test(void *tt)
         t=(double)getTickCount()-t;
         printf("xiangang----------------------------------->detect Run-time: %gms\n", t*1000/getTickFrequency());
 
-        dddt = 0;
-        
-        
+        data_cond.notify_one();
         isdetect = false;
         lk.unlock();
     }
@@ -791,19 +789,13 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
 	Mat re_img1;
 //    resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
-    dec_mat = img2(Rect(260, 188, 200, 200));
-//    if(track_count == 0)
-//    {
-//        std::lock_guard<std::mutex> lk(mut);
-        isdetect = true;
-        data_cond.notify_one();
-        dddt = 1;
-//    }
-    track_count = 1;
+    dec_mat = img2(Rect(CCD_IR_Detect_x - 64, CCD_IR_Detect_y - 64, 128, 128));
 
-//    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
-    re_img1 = img1(Rect(260, 188, 200, 200));
+    std::unique_lock<std::mutex> lk(mut);
+    isdetect = true;
+    data_cond.notify_one();
 
+    re_img1 = img1(Rect(CCD_IR_Detect_x - 64, CCD_IR_Detect_y - 64, 128, 128));
     ///Track  跟踪模块
     if(lastboxfound && tl)
     {
@@ -821,11 +813,11 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
     ///Detect   检测模块
     // detect(dec_mat);
+printf("while1:%d\n",dddt);
 
-    while (dddt) {
+    data_cond.wait(lk, []{return !isdetect;});
 
-    }
-
+printf("while2:%d\n",dddt);
     ///Integration 综合模块
     //TLD只跟踪单目标，所以综合模块综合跟踪器跟踪到的单个目标和检测器检测到的多个目标，然后只输出保守相似度最大的一个目标
     if(tracked)

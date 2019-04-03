@@ -252,6 +252,7 @@ extern volatile unsigned char Frame_Process_End_Flag;
 extern unsigned char mubiaodiushi;
 
 extern unsigned short CCD_IR_Target_x, CCD_IR_Target_y; 
+extern unsigned short CCD_IR_Detect_x, CCD_IR_Detect_y;
 
 unsigned char Picture_1080p[1920*1080*3/2] = {0};
 unsigned char Picture_544p[960*544*3/2] = {0};
@@ -309,9 +310,9 @@ v4l_get_capture_data(struct v4l2_buffer *buf)
 			DisPlay_Target_Bomen(CCD_IR_Target_x, CCD_IR_Target_y, Picture_576p, VPU_Camera_Resolution);
 		}
 
-        LCD_DrawRectangle(260, 188, 460, 388, Picture_576p, 576, 0);
-
-		memcpy(cap_buffers[buf->index].start, Picture_576p, 720*576*3/2);
+//        LCD_DrawRectangle(260, 188, 460, 388, Picture_576p, 576, 0);
+        LCD_DrawRectangle(CCD_IR_Detect_x - 64, CCD_IR_Detect_y - 64, CCD_IR_Detect_x + 64,  CCD_IR_Detect_y + 64, Picture_576p, 576, 0);
+        memcpy(cap_buffers[buf->index].start, Picture_576p, 720*576*3/2);
 	}	
 	else if(VPU_Camera_Resolution == 512) //640*512
 	{
