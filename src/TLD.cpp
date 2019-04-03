@@ -10,6 +10,8 @@
 using namespace cv;
 using namespace std;
 
+int dddt;
+
 cv::Mat iisum;
 cv::Mat iisqsum;
 ///Parameters
@@ -168,6 +170,7 @@ pthread_t pth2;
 pthread_t pth3;
 pthread_t pth4;
 
+//线程退出条件 1 不退出 0 退出线程
 unsigned char Pth_destory_Flag = 1;
 
 //detect检测模块线程函数
@@ -187,21 +190,18 @@ void  *pth_test(void *tt)
     {
         std::unique_lock<std::mutex> lk(mut);
         data_cond.wait(lk, []{return isdetect;});
-printf("Set\n");
+
         // sleep(2);
         count++;
-        // _this->summ++;
         double t = (double)getTickCount();
         detect(dec_mat);
         t=(double)getTickCount()-t;
         printf("xiangang----------------------------------->detect Run-time: %gms\n", t*1000/getTickFrequency());
 
-        std::lock_guard<std::mutex> lk_det(mut_det);
-        isdetect_det = true;
-        data_cond_det.notify_one();
+        dddt = 0;
         
         
-       isdetect = false;
+        isdetect = false;
         lk.unlock();
     }
 	printf("**************************************************destory pth_test\n");
@@ -432,7 +432,9 @@ extern FILE *bb_file;
 
 int TLD_Pthread_destory(void)
 {
+    //线程退出条件 1 不退出 0 退出线程
 	Pth_destory_Flag = 0;
+    usleep(400000);          //等待跟踪算法线程结束
 	//if(bb_file >= 0)
 	clearr();
 	
@@ -442,6 +444,7 @@ int TLD_Pthread_destory(void)
 
 int TLD_Pthread_create(void)
 {
+    //线程退出条件 1 不退出 0 退出线程
 	Pth_destory_Flag = 1;
 
 }
@@ -462,6 +465,7 @@ void read(const FileNode& file)
 //    half_grid1 = false;
 //    half_grid1_1 = false;
     track_count = 0;
+    dddt = 0;
 
     maxx = 0;
     sec_max = 0;
@@ -788,13 +792,14 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 	Mat re_img1;
 //    resize(img2, dec_mat, Size(img2.cols/4, img2.rows/4));
     dec_mat = img2(Rect(260, 188, 200, 200));
-    if(track_count == 0)
-    {
-        std::lock_guard<std::mutex> lk(mut);
+//    if(track_count == 0)
+//    {
+//        std::lock_guard<std::mutex> lk(mut);
         isdetect = true;
         data_cond.notify_one();
-    }
-    // track_count++;
+        dddt = 1;
+//    }
+    track_count = 1;
 
 //    resize(img1, re_img1, Size(img1.cols/4, img1.rows/4));
     re_img1 = img1(Rect(260, 188, 200, 200));
@@ -816,6 +821,10 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 
     ///Detect   检测模块
     // detect(dec_mat);
+
+    while (dddt) {
+
+    }
 
     ///Integration 综合模块
     //TLD只跟踪单目标，所以综合模块综合跟踪器跟踪到的单个目标和检测器检测到的多个目标，然后只输出保守相似度最大的一个目标
@@ -907,19 +916,15 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
     // else
     // 	fprintf(bb_file,"NaN,NaN,NaN,NaN,NaN\n");
 
-   std::unique_lock<std::mutex> lk_det(mut_det);
-   data_cond_det.wait(lk_det, []{return isdetect_det;});
-   isdetect_det = false;
-   lk_det.unlock();
+
 
     ///learn 学习模块
     if (lastvalid && tl)
     {
-       // learn(/*img2*/dec_mat);
-              std::lock_guard<std::mutex> lk2(mut_det2);
-       isdetect2 = true;
-//        g_idx2 = sec_max_num;
-       data_cond_det2.notify_one();
+        learn(/*img2*/dec_mat);
+//              std::lock_guard<std::mutex> lk2(mut_det2);
+//       isdetect2 = true;
+//       data_cond_det2.notify_one();
     }
 
     ptt=(double)getTickCount()-ptt;
@@ -1081,10 +1086,10 @@ void detect(const cv::Mat& frame)
     int half = grid_len / 2;
 
 
-    isdetect4 = true;
-    data_cond_det4.notify_one();
+//    isdetect4 = true;
+//    data_cond_det4.notify_one();
 
-    for (int i=0;i<half;i++)
+    for (int i=0;i<grid_len;i++)
     {
         grid_count++;
         if (getVar(grid[i],iisum,iisqsum)>=var)
@@ -1107,10 +1112,10 @@ void detect(const cv::Mat& frame)
         }
     }
 
-    std::unique_lock<std::mutex> lk4_4(mut_det4_4);
-    data_cond_det4_4.wait(lk4_4, []{return isdetect4_4;});
-    isdetect4_4 = false;
-    lk4_4.unlock();
+//    std::unique_lock<std::mutex> lk4_4(mut_det4_4);
+//    data_cond_det4_4.wait(lk4_4, []{return isdetect4_4;});
+//    isdetect4_4 = false;
+//    lk4_4.unlock();
 
     int detections = dt.bb.size();
 
@@ -1147,12 +1152,12 @@ void detect(const cv::Mat& frame)
     
     if (dbb.size()>0)
     {
-        // printf("xiangang->Found %d NN matches\n",(int)dbb.size());
+         printf("xiangang->Found %d NN matches\n",(int)dbb.size());
         detected=true;
     }
     else
     {
-        // printf("No NN matches found.\n");
+         printf("No NN matches found.\n");
         detected=false;
     }
 
@@ -1228,7 +1233,7 @@ void learn(const Mat& img)
   /// Classifiers update
   classifier.trainF(fern_examples,2);
   classifier.trainNN(nn_examples);
-  classifier.show();
+//  classifier.show();
 }
 
 void buildGrid(const cv::Mat& img, const cv::Rect& box)

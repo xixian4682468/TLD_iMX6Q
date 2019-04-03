@@ -149,17 +149,17 @@ void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples)
               continue;                                            //        continue;
           }                                                        //      end
           //pEx.insert(pEx.begin()+isin[1],nn_examples[i]);        //      tld.pex = [tld.pex(:,1:isin(2)) x(:,i) tld.pex(:,isin(2)+1:end)]; % add to model
-          if(pEx.size() < 3){
+//          if(pEx.size() < 3){
             pEx.push_back(nn_examples[i]);
-          }
+//          }
       }                                                            //    end
       if(y[i]==0 && conf>0.5)                                      //  if y(i) == 0 && conf1 > 0.5
       {
 //          imwrite("nn_examples.jpg", nn_examples[i]);
-          if(nEx.size() < 10)
-          {
+//          if(nEx.size() < 10)
+//          {
             nEx.push_back(nn_examples[i]);
-          }
+//          }
             //    tld.nex = [tld.nex x(:,i)];
       }
   }                                                                 //  end
@@ -168,12 +168,9 @@ void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples)
 }                                                                  //  end
 
 
-void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf,float& csconf){
-  /*Inputs:
-   * -NN Patch
-   * Outputs:
-   * -Relative Similarity (rsconf), Conservative Similarity (csconf), In pos. set|Id pos set|In neg. set (isin)
-   */
+void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf,float& csconf)
+{
+
   isin=vector<int>(3,-1);
 
   if (pEx.empty())
@@ -196,8 +193,6 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
   float nccN, maxN=0;
   bool anyN=false;
 
-// double t = (double)getTickCount();
-// printf("xiangang->pEx.size():%d\n", pEx.size());
   for (int i=0;i<pEx.size();i++)
   {
 //      matchTemplate(pEx[i],example,ncc,CV_TM_CCORR_NORMED);      // measure NCC to positive examples
@@ -215,12 +210,6 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
       }
   }
 
-    // t=(double)getTickCount()-t;
-    // printf("xiangang->pex %gms\n", t*1000/getTickFrequency());
-
-// double t2 = (double)getTickCount();
-// printf("xiangang->nEx.size():%d\n", nEx.size());
-
   for (int i=0;i<nEx.size();i++)
   {
 //      matchTemplate(nEx[i],example,ncc,CV_TM_CCORR_NORMED);     //measure NCC to negative examples
@@ -232,9 +221,6 @@ void FerNNClassifier::NNConf(const Mat& example, vector<int>& isin,float& rsconf
       if(nccN > maxN)
         maxN=nccN;
   }
-    // t2=(double)getTickCount()-t2;
-    // printf("xiangang->nex %gms\n", t2*1000/getTickFrequency());
-
   //set isin
   if (anyP) isin[0]=1;  //if he query patch is highly correlated with any positive patch in the model then it is considered to be one of them
   isin[1]=maxPidx;      //get the index of the maximall correlated positive patch
