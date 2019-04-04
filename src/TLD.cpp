@@ -208,8 +208,8 @@ void  *pth_test(void *tt)
 //detect检测模块显存封装函数
 int ppp()
 {
-    pthread_t pth;
-    pthread_create(&pth, NULL, pth_test,NULL);
+    // pthread_t pth;
+    pthread_create(&pthppp, NULL, pth_test,NULL);
 	//pthread_join(pth,NULL);
 }
 
@@ -432,9 +432,13 @@ int TLD_Pthread_destory(void)
 {
     //线程退出条件 1 不退出 0 退出线程
 	Pth_destory_Flag = 0;
-    usleep(400000);          //等待跟踪算法线程结束
-	//if(bb_file >= 0)
-	clearr();
+	// 线程可能阻塞，发信号通过
+	isdetect = true;
+	data_cond.notify_one();
+	// 等待线程退出
+	pthread_join(pthppp,NULL);
+	// 清除变量容器等
+	// clearr();
 	
 	fclose(bb_file);
 }

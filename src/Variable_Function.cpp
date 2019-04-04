@@ -524,6 +524,7 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 	// 跟踪初始化	
 	if(Frame_NUM == 0)
 	{
+		clearr();
 		FileStorage fs;
 		fs.open("parameters.yml", FileStorage::READ);
 		read(fs.getFirstTopLevelNode());
@@ -572,9 +573,9 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 
 
 		ppp();
-		detect_d2();
-		detect_d3();
-		detect_d4();
+		// detect_d2();
+		// detect_d3();
+		// detect_d4();
 
 
 		// drawBox(last_gray, box_b);

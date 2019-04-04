@@ -88,6 +88,7 @@ int ppp();
 int detect_d2();
 int detect_d3();
 int detect_d4();
+void clearr();
 
 //*******************************************
 int TLD_Pthread_destory(void);
