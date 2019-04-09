@@ -505,23 +505,14 @@ void read(const FileNode& file)
 void init(const Mat& frame1,const Rect& box,FILE* bb_file)
 {
 
-  //bb_file = fopen("bounding_boxes.txt","w");
-  //Get Bounding Boxes
-  //此函数根据传入的box（目标边界框）在传入的图像frame1中构建全部的扫描窗口，并计算重叠度
-    buildGrid(frame1,box);
-    printf("Created %d bounding boxes\n",(int)grid.size());
-  ///Preparation
-  //allocation
+  double t = (double)getTickCount();
+
+  buildGrid(frame1,box);
+
   iisum.create(frame1.rows+1,frame1.cols+1,CV_32F);
   iisqsum.create(frame1.rows+1,frame1.cols+1,CV_64F);
   
-  //Detector data中定义：std::vector<float> dconf;  检测确信度？？
-  //vector 的reserve增加了vector的capacity，但是它的size没有改变！而resize改变了vector
-  //的capacity同时也增加了它的size！reserve是容器预留空间，但在空间内不真正创建元素对象，
-  //所以在没有添加新的对象之前，不能引用容器内的元素。
-  //不管是调用resize还是reserve，二者对容器原有的元素都没有影响。
-  //myVec.reserve( 100 );     // 新元素还没有构造, 此时不能用[]访问元素
-  //myVec.resize( 100 );      // 用元素的默认构造函数构造了100个新的元素，可以直接操作新元素
+
   dconf.reserve(100);
   dbb.reserve(100);
   bbox_step = 7;
@@ -533,56 +524,23 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   good_boxes.reserve(grid.size());
   bad_boxes.reserve(grid.size());
   
-  //TLD中定义：cv::Mat pEx;  //positive NN example 大小为15*15图像片
   pEx.create(patch_size,patch_size,CV_64F);
-  //Init Generator
   generator = PatchGenerator(0,0,noise_init,true,1-scale_init,1+scale_init,-angle_init*CV_PI/180,angle_init*CV_PI/180,-angle_init*CV_PI/180,angle_init*CV_PI/180);
   
-  //此函数根据传入的box（目标边界框），在整帧图像中的全部窗口中寻找与该box距离最小（即最相似，
-  //重叠度最大）的num_closest_init个窗口，然后把这些窗口 归入good_boxes容器
-  //同时，把重叠度小于0.2的，归入 bad_boxes 容器
-  //首先根据overlap的比例信息选出重复区域比例大于60%并且前num_closet_init= 10个的最接近box的RectBox，
-  //相当于对RectBox进行筛选。并通过BBhull函数得到这些RectBox的最大边界
+
   getOverlappingBoxes(box,num_closest_init);
-  //printf("Found %d good boxes, %d bad boxes\n",(int)good_boxes.size(),(int)bad_boxes.size());
-  //printf("Best Box: %d %d %d %d\n",best_box.x,best_box.y,best_box.width,best_box.height);
- // printf("Bounding box hull: %d %d %d %d\n",bbhull.x,bbhull.y,bbhull.width,bbhull.height);
-  //Correct Bounding Box
+
   lastbox=best_box;
   lastconf=1;
   lastvalid=true;
-  //Print
-  fprintf(bb_file,"%d,%d,%d,%d,%f\n", lastbox.x,lastbox.y,lastbox.br().x,lastbox.br().y,lastconf);
-  
-  //Prepare Classifier
-  //Prepare Classifier 准备分类器
-  //scales容器里是所有扫描窗口的尺度，由buildGrid()函数初始化
+
   classifier.prepare(scales);
   
-  ///Generate Data
-  // Generate positive data
+
   generatePositiveData(frame1,num_warps_init);
   
-  // Set variance threshold
-//  Scalar stdev, mean;
-  
-  //统计best_box的均值和标准差
-  ////例如需要提取图像A的某个ROI（感兴趣区域，由矩形框）的话，用Mat类的B=img(ROI)即可提取
-  //frame1(best_box)就表示在frame1中提取best_box区域（目标区域）的图像片
-//  meanStdDev(frame1(best_box),mean,stdev);
-  
-  
-  //利用积分图像去计算每个待检测窗口的方差
-  //cvIntegral( const CvArr* image, CvArr* sum, CvArr* sqsum=NULL, CvArr* tilted_sum=NULL );
-  //计算积分图像，输入图像，sum积分图像, W+1×H+1，sqsum对象素值平方的积分图像，tilted_sum旋转45度的积分图像
-  //利用积分图像，可以计算在某象素的上－右方的或者旋转的矩形区域中进行求和、求均值以及标准方差的计算，
-  //并且保证运算的复杂度为O(1)。
+
   cv::integral(frame1,iisum,iisqsum);
-  
-	//级联分类器模块一：方差检测模块，利用积分图计算每个待检测窗口的方差，方差大于var阈值（目标patch方差的50%）的，
-  //则认为其含有前景目标方差；var 为标准差的平方
-//  var = pow(stdev.val[0],2)*0.5; //getVar(best_box,iisum,iisqsum);
-//  cout << "variance: " << var << endl;
   
   //check variance
   double vr =  getVar(best_box,iisum,iisqsum)*0.5;
@@ -591,14 +549,10 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   // Generate negative data
   generateNegativeData(frame1);
   
-   //将负样本放进 训练和测试集
-  //Split Negative Ferns into Training and Testing sets (they are already shuffled)
   int half = (int)nX.size()*0.5f;
-  
-   //将一半的负样本集 作为 测试集
+
   nXT.assign(nX.begin()+half, nX.end());
-  
-  //然后将剩下的一半作为训练集
+
   nX.resize(half);
   
   ///Split Negative NN Examples into Training and Testing sets
@@ -606,8 +560,6 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
   nExT.assign(nEx.begin()+half, nEx.end());
   nEx.resize(half);
   
-  //Merge Negative Data with Positive Data and shuffle it  
-  //将负样本和正样本合并，然后打乱
   vector<pair<vector<int>,int>> ferns_data(nX.size()+pX.size());
   vector<int> idx = index_shuffle(0,ferns_data.size());
   int a=0;
@@ -620,21 +572,20 @@ void init(const Mat& frame1,const Rect& box,FILE* bb_file)
       ferns_data[idx[a]] = nX[i];
       a++;
   }
-  //Data already have been shuffled, just putting it in the same vector
+
   vector<cv::Mat> nn_data(nEx.size()+1);
   nn_data[0] = pEx;
   for (int i=0;i<nEx.size();i++){
       nn_data[i+1]= nEx[i];
   }
   
-  ///Training
-  //训练 集合分类器（森林） 和 最近邻分类器
+
   classifier.trainF(ferns_data,2); //bootstrap = 2
   classifier.trainNN(nn_data);
-  
-  ///Threshold Evaluation on testing sets 
-  //用样本在上面得到的 集合分类器（森林） 和 最近邻分类器 中分类，评价得到最好的阈值
   classifier.evaluateTh(nXT,nExT);
+
+  t=(double)getTickCount()-t;
+  printf("xiangang----------------------------------->init Run-time: %gms\n", t*1000/getTickFrequency());
 }
 
 /* Generate Positive data
@@ -679,46 +630,9 @@ void generatePositiveData(const Mat& frame, int num_warps)
     printf("Positive examples generated: ferns:%d NN:1\n",(int)pX.size());
 }
 
-void getPattern(const Mat& img, Mat& pattern,Scalar& mean,Scalar& stdev)
+inline void getPattern(const Mat& img, Mat& pattern,Scalar& mean,Scalar& stdev)
 {
-    //Output: resized Zero-Mean patch
-//    resize(img,pattern,Size(patch_size,patch_size));
-pattern = Mat::zeros(patch_size, patch_size, CV_8U);
-//    img
-    int nr= img.rows; // number of rows
-    int nc= img.cols * img.channels(); // total number of elements per line
-    uchar img_data[nc*nr];
-    for (int j=0; j<nr; j++)
-    {
-      const uchar* data= img.ptr<uchar>(j);
-      for (int i=0; i<nc; i++)
-      {
-        img_data[nc * j + i]= data[i];
-      }
-    }
-
-//    pattern
-    int nrp= pattern.rows; // number of rows
-    int ncp= pattern.cols * pattern.channels(); // total number of elements per line
-    uchar pattern_data[ncp*nrp];
-    for (int j=0; j<nrp; j++)
-    {
-      const uchar* data= pattern.ptr<uchar>(j);
-      for (int i=0; i<ncp; i++)
-      {
-        pattern_data[ncp * j + i]= data[i];
-      }
-    }
-    myResize(img_data, pattern_data, img.cols, img.rows, patch_size, patch_size);
-    for (int j=0; j<nrp; j++)
-    {
-      uchar* data= pattern.ptr<uchar>(j);
-      for (int i=0; i<ncp; i++)
-      {
-        data[i] = pattern_data[ncp * j + i];
-      }
-    }
-
+    resize(img,pattern,Size(patch_size,patch_size));
     meanStdDev(pattern,mean,stdev);
     pattern.convertTo(pattern,CV_32F);
     pattern = pattern-mean.val[0];
