@@ -88,6 +88,7 @@ pthread_t socket_tid;
 
 //********************标志位&变量**************************
 unsigned char Track_Begin_Flag = 0;
+int init_tld = 0;
 
 volatile unsigned char Frame_Process_Begin_Flag = 0;
 volatile unsigned char Frame_Process_End_Flag = 1;
@@ -199,15 +200,20 @@ void* tracking_process(void *ptr)
 					break;	
 					
 				case TLD_Algorithm_Track: //2
-					if(Track_Begin_Flag == 1)
-					{
+                    if(Track_Begin_Flag == 1)
+                    {
+                        if(init_tld)
+                        {
+                            Frame_Num_Track = 0;
+                            init_tld = 0;
+                        }
 						TLD_IMAGE_TRACK(Frame_Num_Track);
 						Frame_Num_Track++;
 						if(Frame_Num_Track >= 100)
 							Frame_Num_Track = 10;
-					}
-					else
-						Frame_Num_Track = 0;
+                    }
+//                    else
+//                        Frame_Num_Track = 0;
 					
 					break;
 					
@@ -846,7 +852,7 @@ void* socket_process(void *ptr)
 									{
 										if((tar_x1+5<tar_x2)&&(tar_y1+5<tar_y2))
 										{
-											Track_Begin_Flag = 0;         //切换成手动模式
+//											Track_Begin_Flag = 0;         //切换成手动模式
 											switch(Current_Cmd_State)
 											{
 												//NCC***********************************************
@@ -869,12 +875,13 @@ void* socket_process(void *ptr)
 													
 													//TLD********************************************
 												case TLD_Algorithm_Track:
+                                                        init_tld = 1;
 														if(Frame_Num_Track != 0)
 														{
 															TLD_Pthread_destory();
 														}
 														
-														usleep(400000);          //等待跟踪算法结束
+//														usleep(400000);          //等待跟踪算法结束
 													    Rec_Target_x = (tar_x1+tar_x2)/2;
 														Rec_Target_y = (tar_y1+tar_y2)/2;
 														TLD_Pthread_create();

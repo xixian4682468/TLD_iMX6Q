@@ -524,7 +524,7 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 	// 跟踪初始化	
 	if(Frame_NUM == 0)
 	{
-		clearr();
+        clearr();
 		FileStorage fs;
 		fs.open("parameters.yml", FileStorage::READ);
 		read(fs.getFirstTopLevelNode());
@@ -569,10 +569,12 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
         }
 
         last_gray_resize = last_gray(Rect(Rec_Target_x - 64, Rec_Target_y - 64, 128, 128));
+        printf("init start\n");
 		init(last_gray_resize, box_b, bb_file);
+        printf("init over\n");
 
 
-		ppp();
+//		ppp();
 		// detect_d2();
 		// detect_d3();
 		// detect_d4();
