@@ -542,8 +542,8 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 
 		
         //(Rec_Target_x,Rec_Target_x)为中点点
-        box_b.x = 32;
-        box_b.y = 32;
+        box_b.x = 48;
+        box_b.y = 48;
         box_b.width  = 32 /*/ 4*/;
         box_b.height = 32 /*/ 4*/;
         //画框，中心点， 框大小为128x128
@@ -580,9 +580,10 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		// detect_d4();
 
 
-		// drawBox(last_gray, box_b);
+         drawBox(last_gray_resize, box_b);
 		// init(last_gray, box_b, bb_file);
-		// imwrite("last_gray.bmp", last_gray);
+         imwrite("last_gray.bmp", last_gray_resize);
+         imwrite("last_gray_box.bmp", last_gray_resize(box_b));
 		////tld_init_flag = false;
 		//tld_pro_flag = true;
 	}
