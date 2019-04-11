@@ -307,7 +307,7 @@ v4l_get_capture_data(struct v4l2_buffer *buf)
 		if((VPU_Camera_Format == 2)&&(mubiaodiushi == 0)&&(Track_Begin_Flag == 1))
 		//if((mubiaodiushi == 0)&&(Track_Begin_Flag == 1))
 		{
-            DisPlay_Target_Bomen(CCD_IR_Target_x - 16, CCD_IR_Target_y - 16, Picture_576p, VPU_Camera_Resolution);
+            DisPlay_Target_Bomen(CCD_IR_Target_x, CCD_IR_Target_y, Picture_576p, VPU_Camera_Resolution);
 		}
 
 //        LCD_DrawRectangle(260, 188, 460, 388, Picture_576p, 576, 0);

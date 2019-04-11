@@ -12,6 +12,8 @@ using namespace std;
 
 int dddt;
 extern unsigned short CCD_IR_Detect_x, CCD_IR_Detect_y;
+extern int relDistanceX;
+extern int relDistanceY;
 cv::Mat iisum;
 cv::Mat iisqsum;
 ///Parameters
@@ -716,6 +718,12 @@ void processFrame(const cv::Mat& img1,const cv::Mat& img2,vector<Point2f>& point
 //    data_cond.notify_one();
 
     re_img1 = img1(Rect(CCD_IR_Detect_x - 64, CCD_IR_Detect_y - 64, 128, 128));
+
+    if(relDistanceX != 0 || relDistanceY != 0)
+    {
+        lastbox.x = relDistanceX;
+        lastbox.y = relDistanceY;
+    }
     ///Track  跟踪模块
     if(lastboxfound && tl)
     {

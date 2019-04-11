@@ -412,6 +412,8 @@ unsigned char gSubImageData_malloc[1920*1080*3/2] = {0};
 unsigned short CCD_IR_Target_x = 360, CCD_IR_Target_y = 288;
 unsigned short CCD_IR_Detect_x = 360, CCD_IR_Detect_y = 288;
 extern unsigned short Rec_Target_x,Rec_Target_y;
+int relDistanceX = 0;
+int relDistanceY = 0;
 
 //QS跟踪器  _目标框*******************************************
 QSRECT rcInit;
@@ -541,12 +543,13 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		Mat last_gray_resize;
 
 		
-        //(Rec_Target_x,Rec_Target_x)为中点点
+        //初始化时默认搜索中心和目标中心重合，相对位置为48，默认框大小为32x32
         box_b.x = 48;
         box_b.y = 48;
-        box_b.width  = 32 /*/ 4*/;
-        box_b.height = 32 /*/ 4*/;
-        //画框，中心点， 框大小为128x128
+        box_b.width  = 32;
+        box_b.height = 32;
+
+        //搜索中心和目标中心重合
         CCD_IR_Target_x = Rec_Target_x;
         CCD_IR_Target_y = Rec_Target_y;
         CCD_IR_Detect_x = Rec_Target_x;
@@ -568,6 +571,10 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
             CCD_IR_Detect_y = 576 - 65;
         }
 
+        //初始化时，检测中心和跟踪框中心重合，相对位置固定48
+        relDistanceX = 0;
+        relDistanceY = 0;
+
         last_gray_resize = last_gray(Rect(Rec_Target_x - 64, Rec_Target_y - 64, 128, 128));
         printf("init start\n");
 		init(last_gray_resize, box_b, bb_file);
@@ -580,10 +587,10 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		// detect_d4();
 
 
-         drawBox(last_gray_resize, box_b);
+//         drawBox(last_gray_resize, box_b);
 		// init(last_gray, box_b, bb_file);
-         imwrite("last_gray.bmp", last_gray_resize);
-         imwrite("last_gray_box.bmp", last_gray_resize(box_b));
+//         imwrite("last_gray.bmp", last_gray_resize);
+//         imwrite("last_gray_box.bmp", last_gray_resize(box_b));
 		////tld_init_flag = false;
 		//tld_pro_flag = true;
 	}
@@ -603,14 +610,17 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
 		{
             // 新框x = 检测框x + 相对搜索框位置x
             // 相对搜索框位置x = CCD_IR_Target_x中心x - 64
-            draw_pbox.x = pbox.x + CCD_IR_Detect_x - 64/**4*/;
-            draw_pbox.y = pbox.y + CCD_IR_Detect_y - 64/**4*/;
-            draw_pbox.width = pbox.width/**4*/;
-            draw_pbox.height = pbox.height/**4*/;
+            draw_pbox.x = pbox.x + CCD_IR_Detect_x - 64;
+            draw_pbox.y = pbox.y + CCD_IR_Detect_y - 64;
+            draw_pbox.width = pbox.width;
+            draw_pbox.height = pbox.height;
             mubiaodiushi = 0;
-            CCD_IR_Target_x = draw_pbox.x + draw_pbox.width;
-            CCD_IR_Target_y = draw_pbox.y + draw_pbox.height;
 
+            //目标框中心
+            CCD_IR_Target_x = draw_pbox.x + draw_pbox.width / 2;
+            CCD_IR_Target_y = draw_pbox.y + draw_pbox.height / 2;
+
+            //搜索框中心
             if(abs(CCD_IR_Target_x - CCD_IR_Detect_x) > 20 ||
                     abs(CCD_IR_Target_y - CCD_IR_Detect_y) > 20)
             {
@@ -633,8 +643,12 @@ int TLD_IMAGE_TRACK(int Frame_NUM)
                 if(CCD_IR_Detect_y + 64 > 576)
                 {
                     CCD_IR_Detect_y = 576 - 65;
-                }
+                }           
             }
+
+            //当搜索框中心变化时，重新计算检测出的目标框中心相对位置
+            relDistanceX = (CCD_IR_Target_x - 16) - (CCD_IR_Detect_x - 64);
+            relDistanceY = (CCD_IR_Target_y - 16) - (CCD_IR_Detect_y - 64);
 		}
 		//memcpy(capture_buffers[capture_buf.index].start, current_gray.data, WIDTH*HEIGHT); 
 		swap(last_gray, current_gray);
