@@ -10,8 +10,9 @@ PROJECT(iMX6Q_VPU_Capture_Module.out)
 #add c++11 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
 #SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3 -march=armv7-a -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard")
-SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3")
+#-mfpu=neon -mfloat-abi=softfp
+SET(CMAKE_C_FLAGS "$ENV{CFLAGS} -O3 -mfpu=neon -mfloat-abi=softfp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3 -mfpu=neon -mfloat-abi=softfp")
 
 SET(CMAKE_SYSTEM_NAME Linux)
 SET(TOOLCHAIN_DIR "/home/xiangang/xiangang/arm-linux-gcc/gcc-4.6.2-glibc-2.13-linaro-multilib-2011.12/fsl-linaro-toolchain")

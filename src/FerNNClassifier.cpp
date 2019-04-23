@@ -97,14 +97,19 @@ float FerNNClassifier::measure_forest(vector<int> fern) {
   return votes;
 }
 
-void FerNNClassifier::update(const vector<int>& fern, int C, int N) {
+void FerNNClassifier::update(const vector<int>& fern, int C, int N)
+{
   int idx;
-  for (int i = 0; i < nstructs; i++) {
+  for (int i = 0; i < nstructs; i++)
+  {
       idx = fern[i];
       (C==1) ? pCounter[i][idx] += N : nCounter[i][idx] += N;
-      if (pCounter[i][idx]==0) {
+      if (pCounter[i][idx]==0)
+      {
           posteriors[i][idx] = 0;
-      } else {
+      }
+      else
+      {
           posteriors[i][idx] = ((float)(pCounter[i][idx]))/(pCounter[i][idx] + nCounter[i][idx]);
       }
   }
@@ -143,8 +148,10 @@ void FerNNClassifier::trainNN(const vector<cv::Mat>& nn_examples)
   vector<int> isin;
   for (int i=0;i<nn_examples.size();i++){                          //  For each example
       NNConf(nn_examples[i],isin,conf,dummy);                      //  Measure Relative similarity
-      if (y[i]==1 && conf<=thr_nn){                                //    if y(i) == 1 && conf1 <= tld.model.thr_nn % 0.65
-          if (isin[1]<0){                                          //      if isnan(isin(2))
+      if (y[i]==1 && conf<=thr_nn)
+      {                                //    if y(i) == 1 && conf1 <= tld.model.thr_nn % 0.65
+          if (isin[1]<0)
+          {                                          //      if isnan(isin(2))
               pEx = vector<Mat>(1,nn_examples[i]);                 //        tld.pex = x(:,i);
               continue;                                            //        continue;
           }                                                        //      end
